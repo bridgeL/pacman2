@@ -1,0 +1,9 @@
+#忽略根目录下的所有文件
+/.vs
+/Debug
+/Release
+/x64
+/pacman2/Debug
+/pacman2/Release
+/pacman2/x64
+
