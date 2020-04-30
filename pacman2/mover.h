@@ -358,6 +358,21 @@ public:
 			}
 			flash_group.Add(flash);
 		}
+
+		for (int i = 2; i < 4; i++)
+		{
+			for (int j = 0; j < 2; j++)
+			{
+				CFlash flash;
+				IMAGE face;
+				int x = i * h;
+				int y = j * w;
+				getimage(&face, y, x, w, h);
+				flash.Add(face);
+				flash_group.Add(flash);
+			}	
+		}
+
 		SetWorkingImage(NULL);
 	}
 
@@ -378,6 +393,13 @@ public:
 			cd--;
 			if (cd == 0)
 				status = 0;
+
+			if (cd >= 100)
+				flash_group.SetIdx(4);
+			else if (cd % 10 > 5)
+				flash_group.SetIdx(5);
+			else
+				flash_group.SetIdx(4);
 		}
 	}
 
@@ -405,13 +427,15 @@ public:
 			case DIR_LEFT:	flash_group.SetIdx(1);  break;
 			}
 		}
-		else if (status == 1)
+		else if (status == 2)
 		{
-			flash_group.SetIdx(4);
-		}
-		else
-		{
-			flash_group.SetIdx(5);
+			switch (d)
+			{
+			case DIR_DOWN:  flash_group.SetIdx(8);  break;
+			case DIR_UP:	flash_group.SetIdx(6);  break;
+			case DIR_RIGHT: flash_group.SetIdx(7);  break;
+			case DIR_LEFT:	flash_group.SetIdx(9);  break;
+			}
 		}
 
 	}
@@ -430,75 +454,6 @@ public:
 			// player的位置
 			int pdx, pdy, pi, pj;
 			p->GetNearCross(pdx, pdy, pi, pj);
-
-			/**
-			if (mode == 1)
-			{
-				// 各种策略
-				int pdir = p->GetDir();
-				switch (pdir)
-				{
-				case DIR_DOWN:  pi+=4;  break;
-				case DIR_UP:	pi-=4;  break;
-				case DIR_RIGHT: pj+=4;  break;
-				case DIR_LEFT:	pj-=4;  break;
-				}
-
-				if (map[pi * MAP_COLUMN + pj] == 3)
-				{
-					for (int i = -1; i < 2; i++)
-					{
-						for (int j = -1; j < 2; j++)
-						{
-							if (map[(pi - i) * MAP_COLUMN + pj - j] != 3)
-							{
-								pi -= i;
-								pj -= j;
-								i = 3;
-								break;
-							}
-						}
-					}
-				}
-			}
-			else if (mode == 2)
-			{
-				// 各种策略
-				int pdir = p->GetDir();
-				switch (-pdir)
-				{
-				case DIR_DOWN:  pi += 2;  break;
-				case DIR_UP:	pi -= 2;  break;
-				case DIR_RIGHT: pj += 2;  break;
-				case DIR_LEFT:	pj -= 2;  break;
-				}
-
-				if (map[pi * MAP_COLUMN + pj] == 3)
-				{
-					for (int i = -1; i < 2; i++)
-					{
-						for (int j = -1; j < 2; j++)
-						{
-							if (map[(pi - i) * MAP_COLUMN + pj - j] != 3)
-							{
-								pi -= i;
-								pj -= j;
-								i = 3;
-								break;
-							}
-						}
-					}
-				}
-			}
-			else if (mode == 3)
-			{
-				if (abs(pi - mi) < 2 && abs(pj - mj) < 2)
-				{
-					pi = 30;
-					pj = 1;
-				}
-			}
-			/**/
 
 			// A* 算法，计算移动方向
 			brain.init(map, CPoint(mi, mj), CPoint(pi, pj));

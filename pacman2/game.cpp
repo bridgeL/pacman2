@@ -118,7 +118,7 @@ void init_monster()
 	// 2	3		4		5	6
 
 	IMAGE img_dead;
-	loadimage(&img_dead, _T("PNG"), MAKEINTRESOURCE(IDB_PNG6), PERSON_SIZE * 2, PERSON_SIZE * 2, 1);
+	loadimage(&img_dead, _T("PNG"), MAKEINTRESOURCE(IDB_PNG6), PERSON_SIZE * 2, PERSON_SIZE * 4, 1);
 
 	// init blue
 	LOAD_MONSTER_FACE_IMG(img_blue, IDB_PNG2);
