@@ -8,7 +8,7 @@ int main()
 
 	BeginBatchDraw();
 
-	set_game_mode(2);
+	set_game_mode(MENU);
 
 	// 主循环xu
 	while (!game_close)

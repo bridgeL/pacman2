@@ -19,16 +19,22 @@ using namespace std;
 #define DIR_RIGHT	 2
 
 
-#define BLOCK_SIZE 25			// 方格大小
-#define PERSON_SIZE 40			// 人物大小 
+#define BLOCK_SIZE 20			// 方格大小
+#define PERSON_SIZE 30			// 人物大小 
 #define POINT_SIZE 1			// 豆子大小
 #define POINT_BIG_SIZE 3		// 大力丸大小
+
+#define BEAN_NUM 195	// 豆子总数（含大力丸）
+
+#define PACMAN_SPEED 4
+#define MONSTER_SPEED_0 2
+#define MONSTER_SPEED_1 3
 
 #define MOVE_TOLERENCE 5		// 转弯容限
 #define EAT_TOLERANCE 8			// 吃豆容限
 
-#define MAP_COLUMN 28			// 地图方格列数
-#define MAP_ROW 31				// 地图方格行数
+#define MAP_COLUMN 21			// 地图方格列数
+#define MAP_ROW 27				// 地图方格行数
 #define MAP_CNT (MAP_COLUMN * MAP_ROW)	// 地图方格总数
 
 #define GAME_WIDTH (MAP_COLUMN*BLOCK_SIZE)	// 游戏窗口宽度

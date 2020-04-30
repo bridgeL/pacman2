@@ -95,7 +95,7 @@ void init_pacman()
 		PERSON_SIZE * 3, PERSON_SIZE * 4, 1);
 
 	pacman.init(&background, &img_pacman, CPoint(4, 3),
-		CRect(0, 0, PERSON_SIZE, PERSON_SIZE), map, 8);
+		CRect(0, 0, PERSON_SIZE, PERSON_SIZE), map, PACMAN_SPEED);
 }
 
 #define LOAD_MONSTER_FACE_IMG(IMG_NAME,IMG_ID)					\
@@ -122,22 +122,22 @@ void init_monster()
 
 	// init blue
 	LOAD_MONSTER_FACE_IMG(img_blue, IDB_PNG2);
-	INIT_MONSTER(blue, img_blue, img_dead, 2, 6);
+	INIT_MONSTER(blue, img_blue, img_dead, 2, MONSTER_SPEED_1);
 	MONSTER_STYLE(blue, 10, 1, BLUE);
 
 	// init orange
 	LOAD_MONSTER_FACE_IMG(img_orange, IDB_PNG3);
-	INIT_MONSTER(orange, img_orange, img_dead, 3, 4);
+	INIT_MONSTER(orange, img_orange, img_dead, 3, MONSTER_SPEED_0);
 	MONSTER_STYLE(orange, 3, 1, YELLOW);
 
 	// init pink
 	LOAD_MONSTER_FACE_IMG(img_pink, IDB_PNG4);
-	INIT_MONSTER(pink, img_pink, img_dead, 1, 6);
+	INIT_MONSTER(pink, img_pink, img_dead, 1, MONSTER_SPEED_1);
 	MONSTER_STYLE(pink, 1, 3, BROWN);
 
 	// init red
 	LOAD_MONSTER_FACE_IMG(img_red, IDB_PNG5);
-	INIT_MONSTER(red, img_red, img_dead, 0, 4);
+	INIT_MONSTER(red, img_red, img_dead, 0, MONSTER_SPEED_0);
 	MONSTER_STYLE(red, 1, 10, RED);
 
 	// monster list
@@ -151,37 +151,38 @@ void init_map()
 {
 	const static int a[MAP_CNT] =
 	{
-		3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,
-		3,1,1,1,1,1,1,1,1,1,1,1,1,3,3,1,1,1,1,1,1,1,1,1,1,1,1,3,
-		3,1,3,3,3,3,1,3,3,3,3,3,1,3,3,1,3,3,3,3,3,1,3,3,3,3,1,3,
-		3,1,3,0,0,3,1,3,0,0,0,3,1,3,3,1,3,0,0,0,3,1,3,0,0,3,1,3,
-		3,1,3,3,3,3,1,3,3,3,3,3,1,3,3,1,3,3,3,3,3,1,3,3,3,3,1,3,
-		3,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,3,
-		3,1,3,3,3,3,1,3,3,1,3,3,3,3,3,3,3,3,1,3,3,1,3,3,3,3,1,3,
-		3,1,3,3,3,3,1,3,3,1,3,3,3,3,3,3,3,3,1,3,3,1,3,3,3,3,1,3,
-		3,1,1,1,1,1,1,3,3,1,1,1,1,3,3,1,1,1,1,3,3,1,1,1,1,1,1,3,
-		3,3,3,3,3,3,1,3,3,3,3,3,0,3,3,0,3,3,3,3,3,1,3,3,3,3,3,3,
-		3,0,0,0,0,3,1,3,3,3,3,3,0,3,3,0,3,3,3,3,3,1,3,0,0,0,0,3,
-		3,0,0,0,0,3,1,3,3,0,0,0,0,0,0,0,0,0,0,3,3,1,3,0,0,0,0,3,
-		3,0,0,0,0,3,1,3,3,0,3,3,3,0,0,3,3,3,0,3,3,1,3,0,0,0,0,3,
-		3,3,3,3,3,3,1,3,3,0,3,0,0,0,0,0,0,3,0,3,3,1,3,3,3,3,3,3,
-		0,0,0,0,0,0,1,0,0,0,3,0,0,0,0,0,0,3,0,0,0,1,0,0,0,0,0,0,
-		3,3,3,3,3,3,1,3,3,0,3,0,0,0,0,0,0,3,0,3,3,1,3,3,3,3,3,3,
-		3,0,0,0,0,3,1,3,3,0,3,3,3,3,3,3,3,3,0,3,3,1,3,0,0,0,0,3,
-		3,0,0,0,0,3,1,3,3,0,0,0,0,0,0,0,0,0,0,3,3,1,3,0,0,0,0,3,
-		3,0,0,0,0,3,1,3,3,0,3,3,3,3,3,3,3,3,0,3,3,1,3,0,0,0,0,3,
-		3,3,3,3,3,3,1,3,3,0,3,3,3,3,3,3,3,3,0,3,3,1,3,3,3,3,3,3,
-		3,1,1,1,1,1,1,1,1,1,1,1,1,3,3,1,1,1,1,1,1,1,1,1,1,1,1,3,
-		3,1,3,3,3,3,1,3,3,3,3,3,1,3,3,1,3,3,3,3,3,1,3,3,3,3,1,3,
-		3,1,3,3,3,3,1,3,3,3,3,3,1,3,3,1,3,3,3,3,3,1,3,3,3,3,1,3,
-		3,2,1,1,3,3,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,3,3,1,1,2,3,
-		3,3,3,1,3,3,1,3,3,1,3,3,3,3,3,3,3,3,1,3,3,1,3,3,1,3,3,3,
-		3,3,3,1,3,3,1,3,3,1,3,3,3,3,3,3,3,3,1,3,3,1,3,3,1,3,3,3,
-		3,1,1,1,1,1,1,3,3,1,1,1,1,3,3,1,1,1,1,3,3,1,1,1,1,1,1,3,
-		3,1,3,3,3,3,3,3,3,3,3,3,1,3,3,1,3,3,3,3,3,3,3,3,3,3,1,3,
-		3,1,3,3,3,3,3,3,3,3,3,3,1,3,3,1,3,3,3,3,3,3,3,3,3,3,1,3,
-		3,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,3,
-		3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,
+		3,3,3,3,3, 3,3,3,3,3, 3, 3,3,3,3,3, 3,3,3,3,3, 
+		3,1,1,1,1, 1,1,1,1,1, 3, 1,1,1,1,1, 1,1,1,1,3,
+		3,1,3,3,3, 1,3,3,3,1, 3, 1,3,3,3,1, 3,3,3,1,3,
+		3,1,3,0,3, 1,3,0,3,1, 3, 1,3,0,3,1, 3,0,3,1,3,
+		3,1,3,3,3, 1,3,3,3,1, 3, 1,3,3,3,1, 3,3,3,1,3,
+
+		3,2,1,1,1, 1,1,1,1,1, 1, 1,1,1,1,1, 1,1,1,2,3,
+		3,1,3,3,3, 1,3,1,3,3, 3, 3,3,1,3,1, 3,3,3,1,3,
+		3,1,3,3,3, 1,3,1,3,3, 3, 3,3,1,3,1, 3,3,3,1,3,
+		3,1,1,1,1, 1,3,1,1,1, 3, 1,1,1,3,1, 1,1,1,1,3,
+		3,3,3,3,3, 1,3,3,3,1, 3, 1,3,3,3,1, 3,3,3,3,3,
+
+		0,0,0,0,3, 1,3,0,0,0, 0, 0,0,0,3,1, 3,0,0,0,0,
+		0,0,0,0,3, 1,3,0,3,3, 0, 3,3,0,3,1, 3,0,0,0,0,
+		3,3,3,3,3, 1,3,0,3,0, 0, 0,3,0,3,1, 3,3,3,3,3,
+		0,0,0,0,0, 1,0,0,3,0, 0, 0,3,0,0,1, 0,0,0,0,0,
+		3,3,3,3,3, 1,3,0,3,3, 3, 3,3,0,3,1, 3,3,3,3,3,
+
+		0,0,0,0,3, 1,3,0,0,0, 0, 0,0,0,3,1, 3,0,0,0,0,
+		0,0,0,0,3, 1,3,0,3,3, 3, 3,3,0,3,1, 3,0,0,0,0,
+		3,3,3,3,3, 1,3,0,3,3, 3, 3,3,0,3,1, 3,3,3,3,3,
+		3,1,1,1,1, 1,1,1,1,1, 3, 1,1,1,1,1, 1,1,1,1,3,
+		3,1,3,3,3, 1,3,3,3,1, 3, 1,3,3,3,1, 3,3,3,1,3,
+
+		3,2,1,1,3, 1,1,1,1,1, 1, 1,1,1,1,1, 3,1,1,2,3,
+		3,3,3,1,3, 1,3,1,3,3, 3, 3,3,1,3,1, 3,1,3,3,3,
+		3,3,3,1,3, 1,3,1,3,3, 3, 3,3,1,3,1, 3,1,3,3,3,
+		3,1,1,1,1, 1,3,1,1,1, 3, 1,1,1,3,1, 1,1,1,1,3,
+		3,1,3,3,3, 3,3,3,3,1, 3, 1,3,3,3,3, 3,3,3,1,3,
+
+		3,1,1,1,1, 1,1,1,1,1, 1, 1,1,1,1,1, 1,1,1,1,3,
+		3,3,3,3,3, 3,3,3,3,3, 3, 3,3,3,3,3, 3,3,3,3,3,
 	};
 
 	for (int i = 0; i < MAP_CNT; i++)
@@ -191,6 +192,8 @@ void init_map()
 void init_background()
 {
 	background = IMAGE(GAME_WIDTH, GAME_HEIGHT);
+
+	loadimage(&background, _T("PNG"), MAKEINTRESOURCE(IDB_PNG7), GAME_WIDTH, GAME_HEIGHT, 1);
 
 	SetWorkingImage(&background);
 
@@ -202,11 +205,11 @@ void init_background()
 	{
 		for (int j = 0; j < MAP_COLUMN; j++)
 		{
-			if (j < MAP_COLUMN - 1 && map[i * MAP_COLUMN + j] == 3 && map[i * MAP_COLUMN + j + 1] == 3)
-				line(j * s + bias, i * s + bias, j * s + s + bias, i * s + bias);
+			//if (j < MAP_COLUMN - 1 && map[i * MAP_COLUMN + j] == 3 && map[i * MAP_COLUMN + j + 1] == 3)
+			//	line(j * s + bias, i * s + bias, j * s + s + bias, i * s + bias);
 
-			if (i < MAP_ROW - 1 && map[i * MAP_COLUMN + j] == 3 && map[i * MAP_COLUMN + j + MAP_COLUMN] == 3)
-				line(j * s + bias, i * s + bias, j * s + bias, i * s + s + bias);
+			//if (i < MAP_ROW - 1 && map[i * MAP_COLUMN + j] == 3 && map[i * MAP_COLUMN + j + MAP_COLUMN] == 3)
+			//	line(j * s + bias, i * s + bias, j * s + bias, i * s + s + bias);
 
 			if (map[i * MAP_COLUMN + j] == 1)
 			{
@@ -241,8 +244,8 @@ void menu_page_init()
 {
 	choose = 0;
 
-	int w_base = BLOCK_SIZE * 10;
-	int h_base = BLOCK_SIZE * 12;
+	int w_base = BLOCK_SIZE * 5;
+	int h_base = BLOCK_SIZE * 6;
 
 	fillrectangle(w_base, h_base, w_base + 200, h_base + 200);
 
@@ -267,8 +270,8 @@ void end_page_init()
 {
 	choose = 0;
 
-	int w_base = BLOCK_SIZE * 10;
-	int h_base = BLOCK_SIZE * 12;
+	int w_base = BLOCK_SIZE * 5;
+	int h_base = BLOCK_SIZE * 6;
 	fillrectangle(w_base, h_base, w_base + 200, h_base + 200);
 
 	settextcolor(BLACK);
@@ -301,11 +304,11 @@ void gaming_page_init()
 	bean_cnt = 0;					// 吃豆计数器，当全部豆子都被吃掉后，游戏结束
 	win = 0;						// 游戏胜利/失败标志
 
-	SET_MOVER_SITE(pacman,	23, 14);
-	SET_MOVER_SITE(blue,	13, 12);
-	SET_MOVER_SITE(orange,	13, 15);
-	SET_MOVER_SITE(pink,	14, 12);
-	SET_MOVER_SITE(red,		14, 15);
+	SET_MOVER_SITE(pacman,	20, 10);
+	SET_MOVER_SITE(blue,	12, 10);
+	SET_MOVER_SITE(orange,	13, 10);
+	SET_MOVER_SITE(pink,	12, 10);
+	SET_MOVER_SITE(red,		13, 10);
 
 	pacman.Reset();
 	for (int i = 0; i < 4; i++)
@@ -332,8 +335,8 @@ void gaming_page_init()
 
 void menu_page()
 {
-	int w_base = BLOCK_SIZE * 10;
-	int h_base = BLOCK_SIZE * 12;
+	int w_base = BLOCK_SIZE * 5;
+	int h_base = BLOCK_SIZE * 6;
 
 	
 	settextcolor(WHITE);
@@ -377,7 +380,7 @@ void gaming_page()
 	{
 		// 吃完所有豆子，游戏胜利
 		bean_cnt++;
-		if (bean_cnt >= 246)
+		if (bean_cnt >= BEAN_NUM)
 		{
 			win = 1;
 		}
@@ -417,8 +420,8 @@ void gaming_page()
 
 void end_page()
 {
-	int w_base = BLOCK_SIZE * 10;
-	int h_base = BLOCK_SIZE * 12;
+	int w_base = BLOCK_SIZE * 5;
+	int h_base = BLOCK_SIZE * 6;
 
 	settextcolor(WHITE);
 	if (choose == 0)

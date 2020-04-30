@@ -66,6 +66,9 @@
     <Image Include="res\dead.png">
       <Filter>资源文件</Filter>
     </Image>
+    <Image Include="res\background.png">
+      <Filter>资源文件</Filter>
+    </Image>
   </ItemGroup>
   <ItemGroup>
     <Text Include="res\map.txt" />

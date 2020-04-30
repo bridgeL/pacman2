@@ -153,6 +153,7 @@
     <ResourceCompile Include="pacman2.rc" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="res\background.png" />
     <Image Include="res\blue.png" />
     <Image Include="res\dead.png" />
     <Image Include="res\orange.png" />

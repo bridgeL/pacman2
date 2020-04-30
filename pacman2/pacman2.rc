@@ -62,6 +62,8 @@ IDB_PNG5                PNG                     "res\\red.png"
 
 IDB_PNG6                PNG                     "res\\dead.png"
 
+IDB_PNG7                PNG                     "res\\background.png"
+
 
 /////////////////////////////////////////////////////////////////////////////
 //

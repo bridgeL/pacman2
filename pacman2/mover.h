@@ -502,7 +502,7 @@ public:
 		else
 		{
 			// A* 算法，计算移动方向
-			brain.init(map, CPoint(mi, mj), CPoint(14, 14));
+			brain.init(map, CPoint(mi, mj), CPoint(13, 10));
 			brain.BuildAWay();
 
 			int dir = brain.GetDir();
@@ -574,8 +574,8 @@ public:
 				TCHAR str[10];
 				_itot_s(score, str, 10);
 
-				outtextxy(1 * BLOCK_SIZE + BLOCK_SIZE / 2, 12 * BLOCK_SIZE + BLOCK_SIZE / 2, _T("     "));
-				outtextxy(1 * BLOCK_SIZE + BLOCK_SIZE / 2, 12 * BLOCK_SIZE + BLOCK_SIZE / 2, str);
+				outtextxy(1 * BLOCK_SIZE + BLOCK_SIZE / 2, 10 * BLOCK_SIZE + BLOCK_SIZE / 2, _T("     "));
+				outtextxy(1 * BLOCK_SIZE + BLOCK_SIZE / 2, 10 * BLOCK_SIZE + BLOCK_SIZE / 2, str);
 
 				SetWorkingImage(p_background);
 				setfillcolor(BLACK);
@@ -622,8 +622,8 @@ public:
 						TCHAR str[10];
 						_itot_s(score, str, 10);
 
-						outtextxy(1 * BLOCK_SIZE + BLOCK_SIZE / 2, 12 * BLOCK_SIZE + BLOCK_SIZE / 2, _T("     "));
-						outtextxy(1 * BLOCK_SIZE + BLOCK_SIZE / 2, 12 * BLOCK_SIZE + BLOCK_SIZE / 2, str);
+						outtextxy(1 * BLOCK_SIZE + BLOCK_SIZE / 2, 10 * BLOCK_SIZE + BLOCK_SIZE / 2, _T("     "));
+						outtextxy(1 * BLOCK_SIZE + BLOCK_SIZE / 2, 10 * BLOCK_SIZE + BLOCK_SIZE / 2, str);
 					}
 				}
 			}
