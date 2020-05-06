@@ -18,9 +18,6 @@
     <ClCompile Include="app.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="game.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="mover.h">
@@ -38,7 +35,7 @@
     <ClInclude Include="resource.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="game.h">
+    <ClInclude Include="page.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

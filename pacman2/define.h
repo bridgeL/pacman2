@@ -42,7 +42,8 @@ using namespace std;
 
 #define END 1
 #define MENU 2
-#define GAMING 0
+#define GAMING 3
+#define EXIT -1
 
 
 class CPoint
