@@ -37,6 +37,14 @@ private:
 public:
 	CAStar() :s(0), e(0), w_inst(1), w_path(1), path_show(0), color(RED), cnt(0) {}
 
+	void SetNodeWall(int r,int c)
+	{
+		if (r < 0 || r >= MAP_ROW || c < 0 || c >= MAP_COLUMN)
+			return;
+		int k = r * MAP_COLUMN + c;
+		ns[k].close = 1;
+	}
+
 	void SwitchPathShow(COLORREF c)
 	{
 		if (path_show)

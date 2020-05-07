@@ -29,6 +29,12 @@ int main()
 		if (update_event)
 		{
 			update_event = 0;
+			
+			if (cnt1)
+			{
+				cnt2++;
+				// 调试用的，用于检测是否存在丢帧问题
+			}
 
 			switch (game_mode)
 			{

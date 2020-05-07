@@ -1,6 +1,9 @@
 //zh_CN.GBK
 #include "game.h"
 
+int cnt1 = 1;
+int cnt2 = 1;
+
 int game_mode;
 
 bool game_close;				// 指导多线程关闭的全局变量
@@ -44,6 +47,7 @@ DWORD WINAPI time_thread(PVOID param)
 	{
 		HpSleep(ms);
 		update_event = 1;
+		cnt1++;
 	}
 
 	return 0L;
@@ -78,27 +82,6 @@ DWORD WINAPI keyboard_thread(PVOID)
 	return 0L;
 }
 
-void init()
-{
-	// init variables
-	game_close = 0;					// 指导游戏关闭	  全局变量
-	update_event = 0;				// 指导绘图更新的全局变量，控制帧率
-	key = 0;						// 键盘符号缓存
-
-	// init graph
-	initgraph(GAME_WIDTH, GAME_HEIGHT, EW_SHOWCONSOLE);
-
-	// init pacman
-	init_pacman();
-
-	// init monsters
-	init_monster();
-
-	// 设置多线程
-	CreateThread(NULL, 0, keyboard_thread, NULL, 0, NULL);
-	CreateThread(NULL, 0, time_thread, (PVOID)60, 0, NULL);
-}
-
 #define LOAD_PNG_FROM_RC(PIMAGE,PNG_ID,ROW,COLUMN);					\
 	loadimage(PIMAGE, _T("PNG"), MAKEINTRESOURCE(PNG_ID),			\
 			PERSON_SIZE * COLUMN, PERSON_SIZE * ROW, 1);
@@ -112,11 +95,22 @@ void init()
 	CMONSTER.init_rect(CRect(BURN_R * BLOCK_SIZE - PERSON_SIZE / 2,								\
 			BURN_C * BLOCK_SIZE - PERSON_SIZE / 2, PERSON_SIZE, PERSON_SIZE));					\
 	CMONSTER.init_img(&background, PFACE, PDEAD);												\
-	/*CMONSTER.SwitchPathShow(COLOR);*/															\
+/**CMONSTER.SwitchPathShow(COLOR);	/**/														\
 	CMONSTER.SetBrainStyle(INSTANCE, PATH);
 
-void init_pacman()
+void init()
 {
+	// init variables
+	game_close = 0;					// 指导游戏关闭	  全局变量
+	update_event = 0;				// 指导绘图更新的全局变量，控制帧率
+	key = 0;						// 键盘符号缓存
+
+	srand((unsigned int)time(NULL));
+
+	// init graph
+	initgraph(GAME_WIDTH, GAME_HEIGHT + 20, EW_SHOWCONSOLE);
+
+	// init pacman
 	IMAGE img_pacman;
 	LOAD_PNG_FROM_RC(&img_pacman, IDB_PNG1, 4, 3);
 
@@ -124,23 +118,25 @@ void init_pacman()
 	pacman.init_map(map);
 	pacman.init_rect(CRect(20 * BLOCK_SIZE - PERSON_SIZE / 2, 10 * BLOCK_SIZE - PERSON_SIZE / 2, PERSON_SIZE, PERSON_SIZE));
 	pacman.init_img(&background, &img_pacman, 4, 3);
-}
 
-void init_monster()
-{
+	// init monsters
 	IMAGE img_dead, img_blue, img_pink, img_orange, img_red;
-	
-	LOAD_MONSTER_FACE(&img_blue,	IDB_PNG2);
-	LOAD_MONSTER_FACE(&img_orange,	IDB_PNG3);
-	LOAD_MONSTER_FACE(&img_pink,	IDB_PNG4);
-	LOAD_MONSTER_FACE(&img_red,		IDB_PNG5);
+
+	LOAD_MONSTER_FACE(&img_blue, IDB_PNG2);
+	LOAD_MONSTER_FACE(&img_orange, IDB_PNG3);
+	LOAD_MONSTER_FACE(&img_pink, IDB_PNG4);
+	LOAD_MONSTER_FACE(&img_red, IDB_PNG5);
 
 	LOAD_PNG_FROM_RC(&img_dead, IDB_PNG6, 4, 2);
-	
-	INIT_MONSTER(blue,		&img_blue,		&img_dead,  MONSTER_SPEED_1, 12, 10, 10, 1, BLUE);
-	INIT_MONSTER(orange,	&img_orange,	&img_dead,	MONSTER_SPEED_0, 13, 10, 3,	 1, YELLOW);
-	INIT_MONSTER(pink,		&img_pink,		&img_dead,  MONSTER_SPEED_0, 12, 10, 1,  3, BROWN);
-	INIT_MONSTER(red,		&img_red,		&img_dead,  MONSTER_SPEED_1, 13, 10, 1, 10, RED);
+
+	INIT_MONSTER(blue, &img_blue, &img_dead, MONSTER_SPEED_1, 12, 10, 10, 1, BLUE);
+	INIT_MONSTER(orange, &img_orange, &img_dead, MONSTER_SPEED_0, 13, 10, 3, 1, YELLOW);
+	INIT_MONSTER(pink, &img_pink, &img_dead, MONSTER_SPEED_0, 12, 10, 1, 3, BROWN);
+	INIT_MONSTER(red, &img_red, &img_dead, MONSTER_SPEED_1, 13, 10, 1, 10, RED);
+
+	// 设置多线程
+	CreateThread(NULL, 0, keyboard_thread, NULL, 0, NULL);
+	CreateThread(NULL, 0, time_thread, (PVOID)FPS, 0, NULL);
 }
 
 void init_map()
@@ -187,11 +183,14 @@ void init_map()
 
 void init_background()
 {
+	IMAGE bb = IMAGE(GAME_WIDTH - 12, GAME_HEIGHT-6);
 	background = IMAGE(GAME_WIDTH, GAME_HEIGHT);
 
-	loadimage(&background, _T("PNG"), MAKEINTRESOURCE(IDB_PNG7), GAME_WIDTH, GAME_HEIGHT, 1);
+	loadimage(&bb, _T("PNG"), MAKEINTRESOURCE(IDB_PNG7), GAME_WIDTH - 12 , GAME_HEIGHT-6, 1);
 
 	SetWorkingImage(&background);
+
+	putimage(6, 3, &bb);
 
 	int bias = BLOCK_SIZE / 2;
 	int s = BLOCK_SIZE;
@@ -302,7 +301,7 @@ void gaming_page_init()
 
 	// UI print
 	putimage(0, 0, &background);
-	outtextxy(1 * BLOCK_SIZE + BLOCK_SIZE / 2, 11 * BLOCK_SIZE + BLOCK_SIZE / 2, _T("score:"));
+	outtextxy(1 * BLOCK_SIZE + BLOCK_SIZE / 2, 10 * BLOCK_SIZE , _T("score:"));
 
 	pacman.Draw();
 	for (int i = 0; i < 4; i++)
@@ -429,7 +428,7 @@ void end_page()
 void gaming_deal()
 {
 	// 设置参数
-	if (key == 'q')
+	if (key == 27)
 		set_game_mode(END);
 
 	switch (key)

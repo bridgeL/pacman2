@@ -22,17 +22,21 @@ protected:
 
 	int* map;					// 地图的指针
 
-	int speed;
+	double speed;
+	double speed_d;
 
 	int new_dir;				// 新的运动方向，加入此属性是为了改善游戏手感
 	int dir;					// 运动方向
 
 
 public:
-	CMover() :p_background(NULL), map(NULL), speed(0), new_dir(DIR_NONE), dir(DIR_NONE) {}
+	CMover() :p_background(NULL), map(NULL), speed(0), speed_d(0), new_dir(DIR_NONE), dir(DIR_NONE) 
+	{
+		faces = CFlashGroup(EAT_FLASH_TIME);
+	}
 
 	// 将初始化分解为一系列函数,请按照顺序执行
-	void init_speed(int s)
+	void init_speed(double s)
 	{
 		// 设置速度
 		speed = s;
@@ -109,8 +113,16 @@ public:
 		}
 	}
 
-	void Move(int s)
+	void Move(double ss)
 	{
+		int s = (int)ss;
+		speed_d += (ss - s);
+		if (speed_d >= 1)
+		{
+			s++;
+			speed_d--;
+		}
+
 		switch (dir)
 		{
 		case DIR_DOWN:  rect.site.x += s; break;	// 下
@@ -155,7 +167,12 @@ public:
 			// 不在转弯容县内，不许转弯，按旧方向前进
 		// 没有转向，按旧方向前进
 
-		if (abs(new_dir) * abs(dir) == 2)	// 是否有转向
+		if (new_dir == DIR_NONE)
+		{
+			dir = DIR_NONE;
+			return 1;
+		}
+		else if (abs(new_dir) != abs(dir) )	// 是否有转向
 		{
 			// 转弯限制
 			const int t = MOVE_TOLERENCE;	// 宽容门限
@@ -263,14 +280,14 @@ public:
 		}
 
 
-		int s = speed;	// 移动距离
+		int s = (int)speed;	// 移动距离
 
 		if (map[i * MAP_COLUMN + j] == 3)	// 墙
 		{
 			const int t = BLOCK_SIZE - PERSON_SIZE / 2;	// 墙壁的厚度
 
 			// 计算与墙的距离
-			int instance = speed;
+			int instance = (int)speed;
 
 			switch (dir)
 			{
@@ -355,6 +372,7 @@ class CMonster :public CMover
 private:
 	int cd;
 	int status;			// 0追逐、1恐惧、2死亡
+	CPoint escape_rc;	// 逃跑的地点
 	CAStar brain;
 
 public:
@@ -435,7 +453,7 @@ public:
 		SetWorkingImage(NULL);
 	}
 
-	void init(IMAGE* p_back, IMAGE* p_face, IMAGE* p_dead, CPoint mn, CRect r, int* mp, int s, int c)
+	void init(IMAGE* p_back, IMAGE* p_face, IMAGE* p_dead, CPoint mn, CRect r, int* mp, double s, int c)
 	{
 		init_speed(s);
 
@@ -446,30 +464,37 @@ public:
 		init_img(p_back, p_face, p_dead);
 	}
 
-	void Fear(int t)
+	void Fear(int t=0)
 	{
-		if (status != 2)
+		if (t > 0)
 		{
-			cd = t;
-			status = 1;
-			SetFlash();
+			if (status != 2)
+			{
+				cd = t;
+				status = 1;
+				SetFlash();
+			}
 		}
-	}
-
-	void Fear()
-	{
-		if (status == 1)
+		else
 		{
-			cd--;
-			if (cd == 0)
-				status = 0;
+			if (status == 1)
+			{
+				cd--;
+				if (cd == 0)
+				{
+					status = 0;
+					escape_rc.x = 0;
+					escape_rc.y = 0;
+				}
 
-			if (cd >= MONSTER_FEAR_TIME * 0.1)
-				faces.SetIdx(4);
-			else if (cd % 10 > 5)
-				faces.SetIdx(5);
-			else
-				faces.SetIdx(4);
+
+				if (cd >= MONSTER_FEAR_TIME * 0.1)
+					faces.SetIdx(4);
+				else if (cd % 10 > 5)
+					faces.SetIdx(5);
+				else
+					faces.SetIdx(4);
+			}
 		}
 	}
 
@@ -514,17 +539,20 @@ public:
 	
 	void Update(CMover* p)
 	{
+		faces.Update();
+
 		Fear();
 
+		// monster的位置
 		int mdx, mdy, mi, mj;
 		GetNearCross(mdx, mdy, mi, mj);
 
+		// player的位置
+		int pdx, pdy, pi, pj;
+		p->GetNearCross(pdx, pdy, pi, pj);
+
 		if (status == 0 )
 		{
-			// player的位置
-			int pdx, pdy, pi, pj;
-			p->GetNearCross(pdx, pdy, pi, pj);
-
 			// A* 算法，计算移动方向
 			brain.init(map, CPoint(mi, mj), CPoint(pi, pj));
 			brain.BuildAWay();
@@ -541,33 +569,90 @@ public:
 		}
 		else if (status == 1)
 		{
-			// player的位置
-			int pdx, pdy, pi, pj;
-			p->GetNearCross(pdx, pdy, pi, pj);
+			const static int safe_row[7] = { 1,5,8,18,20,23,25 };
+			const static int safe_column[6] = { 1,5,9,11,15,19 };
+
+			int danger_row_idx = 0;
+			for (int i = 0; i < 6; i++)
+				if (safe_row[i] < pi && pi < safe_row[i + 1])
+				{
+					danger_row_idx = i;
+					break;
+				}
+
+			int danger_column_idx = 0;
+			for (int i = 0; i < 5; i++)
+				if (safe_column[i] < pj && pj < safe_column[i + 1])
+				{
+					danger_column_idx = i;
+					break;
+				}
+
+			
+
+			if ((escape_rc.x == mi && escape_rc.y == mj ) || (escape_rc.x == 0 && escape_rc.y == 0) 
+				||(abs(escape_rc.x - pi) <= 10 && abs(escape_rc.y- pj) <= 5))
+			{
+				
+				while (1)
+				{
+					int r = rand() % 7;
+					if (abs(r - danger_row_idx) > 1)
+					{
+						escape_rc.x = safe_row[r];
+						break;
+					}
+				}
+
+				while (1)
+				{
+					int c = rand() % 6;
+					if (abs(c - danger_column_idx) > 1)
+					{
+						escape_rc.y = safe_column[c];
+						break;
+					}
+				}
+				//cout << "escape_rc = (" << escape_rc.x << "," << escape_rc.y << ")\n";
+			}
 
 
 			// A* 算法，计算移动方向
-			brain.init(map, CPoint(mi, mj), CPoint(pi, pj));
+			brain.init(map, CPoint(mi, mj), CPoint(escape_rc.x, escape_rc.y));
+
+			if (abs(mi - pi) <= 4 && abs(mj - pj) <= 3)
+			{
+				for (int i = -1; i < 2; i++)
+				{
+					for (int j = -1; j < 2; j++)
+					{
+						brain.SetNodeWall(pi + i, pj + j);
+					}
+				}
+			}
+			else
+			{
+				for (int i = -3; i < 4; i++)
+				{
+					for (int j = -2; j < 3; j++)
+					{
+						brain.SetNodeWall(pi + i, pj + j);
+					}
+				}
+			}
+
+			
 			brain.BuildAWay();
 
 			int dir = brain.GetDir();
+			SetNewDir(dir);
 
-			const int dirs[4] = { DIR_UP,DIR_RIGHT,DIR_DOWN,DIR_LEFT };
+			// 转向
+			if (Turn())
+				SetFlash(dir);
 
-			for (int i = 0; i < 4; i++)
-			{
-				if (dir == dirs[i])
-					continue;
-				SetNewDir(dirs[i]);
-
-				// 转向
-				if (Turn())
-					SetFlash(dir);
-
-				// 前进
-				if (Go())
-					break;
-			}
+			// 前进
+			Go();
 		}
 		else
 		{
@@ -590,10 +675,6 @@ public:
 			Go();
 		}
 
-		faces.Update();
-
-		
-
 	}
 
 	void Reset()
@@ -613,6 +694,17 @@ public:
 	CPacman() : CMover(), score(0) {};
 
 	int GetScore() { return score; }
+
+	void AddScore(int ds)
+	{
+		score += ds;
+
+		TCHAR str[10];
+		_itot_s(score, str, 10);
+
+		outtextxy(1 * BLOCK_SIZE + BLOCK_SIZE / 2, 11 * BLOCK_SIZE, _T("     "));
+		outtextxy(1 * BLOCK_SIZE + BLOCK_SIZE / 2, 11 * BLOCK_SIZE, str);
+	}
 
 	int Eat()	// 吃豆
 	{
@@ -638,13 +730,8 @@ public:
 			if (r != 0)
 			{
 				map[i * MAP_COLUMN + j] = 0;
-				score += m;
 
-				TCHAR str[10];
-				_itot_s(score, str, 10);
-
-				outtextxy(1 * BLOCK_SIZE + BLOCK_SIZE / 2, 10 * BLOCK_SIZE + BLOCK_SIZE / 2, _T("     "));
-				outtextxy(1 * BLOCK_SIZE + BLOCK_SIZE / 2, 10 * BLOCK_SIZE + BLOCK_SIZE / 2, str);
+				AddScore(m);
 
 				SetWorkingImage(p_background);
 				setfillcolor(BLACK);
@@ -670,7 +757,7 @@ public:
 			CMonster* mons = mons_list[i];
 			CPoint m_s = mons->GetSite();
 			int instance = abs(m_s.x - rect.site.x) + abs(m_s.y - rect.site.y);
-			if (instance <= EAT_TOLERANCE)
+			if (instance <= FIGHT_TOLERANCE)
 			{
 				int st = mons->GetStatus();
 				if (st == 0)
@@ -679,14 +766,8 @@ public:
 				}
 				else if (st == 1)
 				{
-					score += 10;
 					mons->Die();
-
-					TCHAR str[10];
-					_itot_s(score, str, 10);
-
-					outtextxy(1 * BLOCK_SIZE + BLOCK_SIZE / 2, 10 * BLOCK_SIZE + BLOCK_SIZE / 2, _T("     "));
-					outtextxy(1 * BLOCK_SIZE + BLOCK_SIZE / 2, 10 * BLOCK_SIZE + BLOCK_SIZE / 2, str);
+					AddScore(10);
 
 				}
 			}

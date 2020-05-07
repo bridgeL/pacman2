@@ -10,6 +10,7 @@
 #include <iterator>
 #include <string>
 #include <list>
+#include <random>
 using namespace std;
 
 
@@ -27,13 +28,16 @@ using namespace std;
 
 #define BEAN_NUM 195	// 豆子总数（含大力丸）
 
+#define FPS 60
 #define PACMAN_SPEED 3
-#define MONSTER_SPEED_0 1
-#define MONSTER_SPEED_1 2
+#define MONSTER_SPEED_0 1.5
+#define MONSTER_SPEED_1 2.5
 #define MONSTER_FEAR_TIME 600
+#define EAT_FLASH_TIME 5
 
 #define MOVE_TOLERENCE 5		// 转弯容限
 #define EAT_TOLERANCE 8			// 吃豆容限
+#define FIGHT_TOLERANCE 12		// 战斗容限
 
 #define MAP_COLUMN 21			// 地图方格列数
 #define MAP_ROW 27				// 地图方格行数

@@ -8,7 +8,7 @@ class CFlash
 {
 private:
 	vector<IMAGE*> m_list;
-	int idx_now;				// 当前显示索引
+	size_t idx_now;				// 当前显示索引
 
 public:
 	CFlash() :idx_now(0) {}
