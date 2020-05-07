@@ -1,5 +1,6 @@
 //zh_CN.GBK
 #pragma once
+// 定义了二维空间的 point类 和 用于标注区域的 rect类
 #include <easyx.h>
 #include <conio.h>
 #include <time.h>
@@ -26,9 +27,10 @@ using namespace std;
 
 #define BEAN_NUM 195	// 豆子总数（含大力丸）
 
-#define PACMAN_SPEED 4
-#define MONSTER_SPEED_0 2
-#define MONSTER_SPEED_1 3
+#define PACMAN_SPEED 3
+#define MONSTER_SPEED_0 1
+#define MONSTER_SPEED_1 2
+#define MONSTER_FEAR_TIME 600
 
 #define MOVE_TOLERENCE 5		// 转弯容限
 #define EAT_TOLERANCE 8			// 吃豆容限

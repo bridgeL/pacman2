@@ -7,12 +7,12 @@ bool game_close;				// 指导多线程关闭的全局变量
 bool update_event;				// 指导绘图更新的全局变量，控制帧率
 char key;						// 键盘符号暂存
 
-CPacman pacman;			// 吃豆人
-CMonster** mons_list;	// 四个怪物
-CMonster red;
+CPacman pacman;			// 吃豆人	
+CMonster red;			// 四个怪物
 CMonster pink;
 CMonster orange;
 CMonster blue;
+CMonster* mons_list[4] = {&red, &pink, &orange, &blue};
 
 int map[MAP_CNT];		// 地图 31 x 28 行列式存储（但是需要注意 easyx 是 列行式绘图）
 
@@ -23,13 +23,26 @@ int win;
 int highest_score;
 int choose;
 
+void HpSleep(int ms)
+{
+	static clock_t oldclock = clock();		// 静态变量，记录上一次 tick
+
+	oldclock += ms * CLOCKS_PER_SEC / 1000;	// 更新 tick
+
+	if (clock() > oldclock)					// 如果已经超时，无需延时
+		oldclock = clock();
+	else
+		while (clock() < oldclock)			// 延时
+			Sleep(1);						// 释放 CPU 控制权，降低 CPU 占用率
+}
+
 DWORD WINAPI time_thread(PVOID param)
 {
 	int fps = (int)param;
 	int ms = 1000 / fps;
 	while (1)
 	{
-		Sleep(ms);
+		HpSleep(ms);
 		update_event = 1;
 	}
 
@@ -72,8 +85,6 @@ void init()
 	update_event = 0;				// 指导绘图更新的全局变量，控制帧率
 	key = 0;						// 键盘符号缓存
 
-	mons_list = new CMonster * [4];	// 怪物列表
-
 	// init graph
 	initgraph(GAME_WIDTH, GAME_HEIGHT, EW_SHOWCONSOLE);
 
@@ -85,66 +96,51 @@ void init()
 
 	// 设置多线程
 	CreateThread(NULL, 0, keyboard_thread, NULL, 0, NULL);
-	CreateThread(NULL, 0, time_thread, (PVOID)30, 0, NULL);
+	CreateThread(NULL, 0, time_thread, (PVOID)60, 0, NULL);
 }
+
+#define LOAD_PNG_FROM_RC(PIMAGE,PNG_ID,ROW,COLUMN);					\
+	loadimage(PIMAGE, _T("PNG"), MAKEINTRESOURCE(PNG_ID),			\
+			PERSON_SIZE * COLUMN, PERSON_SIZE * ROW, 1);
+
+#define LOAD_MONSTER_FACE(PIMAGE, PNG_ID);							\
+	LOAD_PNG_FROM_RC(PIMAGE, PNG_ID, 4, 2);
+
+#define INIT_MONSTER(CMONSTER, PFACE, PDEAD, SPEED, BURN_R, BURN_C, INSTANCE, PATH, COLOR);		\
+	CMONSTER.init_speed(SPEED);																	\
+	CMONSTER.init_map(map);																		\
+	CMONSTER.init_rect(CRect(BURN_R * BLOCK_SIZE - PERSON_SIZE / 2,								\
+			BURN_C * BLOCK_SIZE - PERSON_SIZE / 2, PERSON_SIZE, PERSON_SIZE));					\
+	CMONSTER.init_img(&background, PFACE, PDEAD);												\
+	/*CMONSTER.SwitchPathShow(COLOR);*/															\
+	CMONSTER.SetBrainStyle(INSTANCE, PATH);
 
 void init_pacman()
 {
 	IMAGE img_pacman;
-	loadimage(&img_pacman, _T("PNG"), MAKEINTRESOURCE(IDB_PNG1), 
-		PERSON_SIZE * 3, PERSON_SIZE * 4, 1);
+	LOAD_PNG_FROM_RC(&img_pacman, IDB_PNG1, 4, 3);
 
-	pacman.init(&background, &img_pacman, CPoint(4, 3),
-		CRect(0, 0, PERSON_SIZE, PERSON_SIZE), map, PACMAN_SPEED);
+	pacman.init_speed(PACMAN_SPEED);
+	pacman.init_map(map);
+	pacman.init_rect(CRect(20 * BLOCK_SIZE - PERSON_SIZE / 2, 10 * BLOCK_SIZE - PERSON_SIZE / 2, PERSON_SIZE, PERSON_SIZE));
+	pacman.init_img(&background, &img_pacman, 4, 3);
 }
-
-#define LOAD_MONSTER_FACE_IMG(IMG_NAME,IMG_ID)					\
-	IMAGE IMG_NAME;												\
-	loadimage(&IMG_NAME, _T("PNG"), MAKEINTRESOURCE(IMG_ID),	\
-				PERSON_SIZE * 2, PERSON_SIZE * 4, 1);
-
-#define INIT_MONSTER(CMONSTER, FACE_IMG, DEAD_IMG, CHASE_MODE, SPEED)	\
-	CMONSTER.init(&background, &FACE_IMG, &DEAD_IMG, CPoint(4, 2),		\
-	CRect(0, 0, PERSON_SIZE, PERSON_SIZE),	map, SPEED, CHASE_MODE);
-
-#define MONSTER_STYLE(CMONSTER, INSTANCE, PATH, COLOR)	\
-	CMONSTER.SwitchPathShow(COLOR);						\
-	CMONSTER.SwitchPathShow(COLOR);						\
-	CMONSTER.SetBrainStyle(INSTANCE,PATH);
 
 void init_monster()
 {
-	// blue orange	pink	red dead
-	// 2	3		4		5	6
+	IMAGE img_dead, img_blue, img_pink, img_orange, img_red;
+	
+	LOAD_MONSTER_FACE(&img_blue,	IDB_PNG2);
+	LOAD_MONSTER_FACE(&img_orange,	IDB_PNG3);
+	LOAD_MONSTER_FACE(&img_pink,	IDB_PNG4);
+	LOAD_MONSTER_FACE(&img_red,		IDB_PNG5);
 
-	IMAGE img_dead;
-	loadimage(&img_dead, _T("PNG"), MAKEINTRESOURCE(IDB_PNG6), PERSON_SIZE * 2, PERSON_SIZE * 4, 1);
-
-	// init blue
-	LOAD_MONSTER_FACE_IMG(img_blue, IDB_PNG2);
-	INIT_MONSTER(blue, img_blue, img_dead, 2, MONSTER_SPEED_1);
-	MONSTER_STYLE(blue, 10, 1, BLUE);
-
-	// init orange
-	LOAD_MONSTER_FACE_IMG(img_orange, IDB_PNG3);
-	INIT_MONSTER(orange, img_orange, img_dead, 3, MONSTER_SPEED_0);
-	MONSTER_STYLE(orange, 3, 1, YELLOW);
-
-	// init pink
-	LOAD_MONSTER_FACE_IMG(img_pink, IDB_PNG4);
-	INIT_MONSTER(pink, img_pink, img_dead, 1, MONSTER_SPEED_1);
-	MONSTER_STYLE(pink, 1, 3, BROWN);
-
-	// init red
-	LOAD_MONSTER_FACE_IMG(img_red, IDB_PNG5);
-	INIT_MONSTER(red, img_red, img_dead, 0, MONSTER_SPEED_0);
-	MONSTER_STYLE(red, 1, 10, RED);
-
-	// monster list
-	mons_list[0] = &blue;
-	mons_list[1] = &orange;
-	mons_list[2] = &pink;
-	mons_list[3] = &red;
+	LOAD_PNG_FROM_RC(&img_dead, IDB_PNG6, 4, 2);
+	
+	INIT_MONSTER(blue,		&img_blue,		&img_dead,  MONSTER_SPEED_1, 12, 10, 10, 1, BLUE);
+	INIT_MONSTER(orange,	&img_orange,	&img_dead,	MONSTER_SPEED_0, 13, 10, 3,	 1, YELLOW);
+	INIT_MONSTER(pink,		&img_pink,		&img_dead,  MONSTER_SPEED_0, 12, 10, 1,  3, BROWN);
+	INIT_MONSTER(red,		&img_red,		&img_dead,  MONSTER_SPEED_1, 13, 10, 1, 10, RED);
 }
 
 void init_map()
@@ -205,12 +201,6 @@ void init_background()
 	{
 		for (int j = 0; j < MAP_COLUMN; j++)
 		{
-			//if (j < MAP_COLUMN - 1 && map[i * MAP_COLUMN + j] == 3 && map[i * MAP_COLUMN + j + 1] == 3)
-			//	line(j * s + bias, i * s + bias, j * s + s + bias, i * s + bias);
-
-			//if (i < MAP_ROW - 1 && map[i * MAP_COLUMN + j] == 3 && map[i * MAP_COLUMN + j + MAP_COLUMN] == 3)
-			//	line(j * s + bias, i * s + bias, j * s + bias, i * s + s + bias);
-
 			if (map[i * MAP_COLUMN + j] == 1)
 			{
 				setfillcolor(WHITE);
@@ -244,8 +234,8 @@ void menu_page_init()
 {
 	choose = 0;
 
-	int w_base = BLOCK_SIZE * 5;
-	int h_base = BLOCK_SIZE * 6;
+	static const int w_base = BLOCK_SIZE * 5;
+	static const int h_base = BLOCK_SIZE * 6;
 
 	fillrectangle(w_base, h_base, w_base + 200, h_base + 200);
 
@@ -270,8 +260,8 @@ void end_page_init()
 {
 	choose = 0;
 
-	int w_base = BLOCK_SIZE * 5;
-	int h_base = BLOCK_SIZE * 6;
+	static const int w_base = BLOCK_SIZE * 5;
+	static const int h_base = BLOCK_SIZE * 6;
 	fillrectangle(w_base, h_base, w_base + 200, h_base + 200);
 
 	settextcolor(BLACK);
@@ -295,20 +285,10 @@ void end_page_init()
 	FlushBatchDraw();
 }
 
-#define SET_MOVER_SITE(MOVER_NAME,X,Y)									\
-		MOVER_NAME.SetSite(	CPoint(	X * BLOCK_SIZE - PERSON_SIZE / 2,	\
-									Y * BLOCK_SIZE - PERSON_SIZE / 2));
-
 void gaming_page_init()
 {
 	bean_cnt = 0;					// 吃豆计数器，当全部豆子都被吃掉后，游戏结束
 	win = 0;						// 游戏胜利/失败标志
-
-	SET_MOVER_SITE(pacman,	20, 10);
-	SET_MOVER_SITE(blue,	12, 10);
-	SET_MOVER_SITE(orange,	13, 10);
-	SET_MOVER_SITE(pink,	12, 10);
-	SET_MOVER_SITE(red,		13, 10);
 
 	pacman.Reset();
 	for (int i = 0; i < 4; i++)
@@ -335,8 +315,8 @@ void gaming_page_init()
 
 void menu_page()
 {
-	int w_base = BLOCK_SIZE * 5;
-	int h_base = BLOCK_SIZE * 6;
+	static const int w_base = BLOCK_SIZE * 5;
+	static const int h_base = BLOCK_SIZE * 6;
 
 	
 	settextcolor(WHITE);
@@ -389,7 +369,7 @@ void gaming_page()
 		if (bean_type == 2)
 		{
 			for (int i = 0; i < 4; i++)
-				mons_list[i]->Fear(300);
+				mons_list[i]->Fear(MONSTER_FEAR_TIME);
 		}
 	}
 
@@ -420,8 +400,8 @@ void gaming_page()
 
 void end_page()
 {
-	int w_base = BLOCK_SIZE * 5;
-	int h_base = BLOCK_SIZE * 6;
+	static const int w_base = BLOCK_SIZE * 5;
+	static const int h_base = BLOCK_SIZE * 6;
 
 	settextcolor(WHITE);
 	if (choose == 0)

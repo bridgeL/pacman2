@@ -1,20 +1,24 @@
 //zh_CN.GBK
 #pragma once
 // 此文档主要定义了 mover类，以及其派生的 monster类
-// 此外还定义了二维空间的 point类 和 用于标注区域的 rect类
 
 #include "define.h"
 #include "flash.h"
 #include "astar.h"
+
+// 引用该库才能使用 TransparentBlt 函数
+#pragma comment( lib, "MSIMG32.LIB")
 
 class CMover
 {
 protected:
 	IMAGE* p_background;		// 背景图片的指针
 	IMAGE back;					// 为了加快clear的速度，设置back成员储存每次的背景图
-	CFlashGroup flash_group;	// 各方向动画序列的容器
+	CFlashGroup faces;	// 各方向动画序列的容器
 
 	CRect rect;					// 当前的位置
+
+	CPoint burn;				// 出生地点
 
 	int* map;					// 地图的指针
 
@@ -27,18 +31,28 @@ protected:
 public:
 	CMover() :p_background(NULL), map(NULL), speed(0), new_dir(DIR_NONE), dir(DIR_NONE) {}
 
-	// 通过一张图片初始化mover对象
-	void init(IMAGE* p_back, IMAGE* p_face, CPoint mn, CRect r, int* mp, int s)
+	// 将初始化分解为一系列函数,请按照顺序执行
+	void init_speed(int s)
 	{
 		// 设置速度
 		speed = s;
+	}
 
+	void init_map(int* m)
+	{
 		// 设置地图地址
-		map = mp;
+		map = m;
+	}
 
+	void init_rect(CRect r)
+	{
 		// 设置当前位置
 		rect = r;
+		burn = rect.site;
+	}
 
+	void init_img(IMAGE* p_back, IMAGE* p_face, int r, int c)
+	{
 		// 设置背景图指针
 		p_background = p_back;
 
@@ -46,15 +60,12 @@ public:
 		int h = rect.shape.x;
 		int w = rect.shape.y;
 
-		int m = mn.x;	// 行数  4  4
-		int n = mn.y;	// 列数  3  2
-
 		SetWorkingImage(p_face);
 
-		for (int i = 0; i < m; i++)
-		{	
+		for (int i = 0; i < r; i++)
+		{
 			CFlash flash;
-			for (int j = 0; j < n; j++)
+			for (int j = 0; j < c; j++)
 			{
 				IMAGE face;
 				int x = i * h;
@@ -62,14 +73,20 @@ public:
 				getimage(&face, y, x, w, h);
 				flash.Add(face);
 			}
-			flash_group.Add(flash);
+			faces.Add(flash);
 		}
 
 		SetWorkingImage(NULL);
 	}
 
+	void Reset()
+	{
+		rect.site = burn;
+		dir = DIR_NONE;
+		new_dir = DIR_NONE;
+	}
+
 	// 设置/读取 当前位置的左上角坐标
-	void SetSite(CPoint s) { rect.site = s; }
 	CPoint GetSite() { return rect.site; }
 
 	// 读取 当前位置的中心点坐标
@@ -85,10 +102,10 @@ public:
 	{
 		switch (d)
 		{
-		case DIR_DOWN:  flash_group.SetIdx(3);  break;
-		case DIR_UP:	flash_group.SetIdx(2);  break;
-		case DIR_RIGHT: flash_group.SetIdx(0);  break;
-		case DIR_LEFT:	flash_group.SetIdx(1);  break;
+		case DIR_DOWN:  faces.SetIdx(3);  break;
+		case DIR_UP:	faces.SetIdx(2);  break;
+		case DIR_RIGHT: faces.SetIdx(0);  break;
+		case DIR_LEFT:	faces.SetIdx(1);  break;
 		}
 	}
 
@@ -280,7 +297,7 @@ public:
 
 	void Update()
 	{
-		flash_group.Update();
+		faces.Update();
 
 		// 转向
 		if (Turn())
@@ -290,6 +307,25 @@ public:
 		Go();
 	}
 
+private:
+	// 透明贴图函数
+	// 参数：
+	//		dstimg: 目标 IMAGE 对象指针。NULL 表示默认窗体
+	//		x, y:	目标贴图位置
+	//		srcimg: 源 IMAGE 对象指针。NULL 表示默认窗体
+	//		transparentcolor: 透明色。srcimg 的该颜色并不会复制到 dstimg 上，从而实现透明贴图
+	void transparentimage(IMAGE* dstimg, int x, int y, IMAGE* srcimg, UINT transparentcolor)
+	{
+		HDC dstDC = GetImageHDC(dstimg);
+		HDC srcDC = GetImageHDC(srcimg);
+		int w = srcimg->getwidth();
+		int h = srcimg->getheight();
+
+		// 使用 Windows GDI 函数实现透明位图
+		TransparentBlt(dstDC, x, y, w, h, srcDC, 0, 0, w, h, transparentcolor);
+	}
+
+public:
 	void Draw()
 	{
 		// 为了美观，
@@ -297,7 +333,8 @@ public:
 		// center = site + shape / 2
 		// draw = center + bias - shape / 2 
 		//      = site + bias
-		putimage(rect.site.y + BLOCK_SIZE / 2, rect.site.x + BLOCK_SIZE / 2, &flash_group.GetImage());
+		transparentimage(NULL, rect.site.y + BLOCK_SIZE / 2, rect.site.x + BLOCK_SIZE / 2, &faces.GetImage(), BLACK);
+		//putimage(rect.site.y + BLOCK_SIZE / 2, rect.site.x + BLOCK_SIZE / 2, &faces.GetImage());
 	}
 
 	void Clear()
@@ -318,11 +355,10 @@ class CMonster :public CMover
 private:
 	int cd;
 	int status;			// 0追逐、1恐惧、2死亡
-	int mode;			// 不同mode追逐模式不同
 	CAStar brain;
 
 public:
-	CMonster() :CMover(), cd(0), status(0), mode(0) {}
+	CMonster() :CMover(), cd(0), status(0) {}
 
 	void SwitchPathShow(COLORREF color = RED)
 	{
@@ -334,16 +370,39 @@ public:
 		brain.SetStyle(instance, path);
 	}
 
-	void init(IMAGE* p_back, IMAGE* p_face, IMAGE* p_dead, CPoint mn, CRect r, int* mp, int s, int chase_mode)
+	void init_chase_mode(CPoint chase_mode)
 	{
-		CMover::init(p_back, p_face, mn, r, mp, s);
+		// 设置追击模式
+		int instance = chase_mode.x;
+		int path = chase_mode.y;
+		brain.SetStyle(instance, path);
+	}
 
-		mode = chase_mode;
+	void init_img(IMAGE* p_back, IMAGE* p_face, IMAGE* p_dead)
+	{
+		// 设置背景图指针
+		p_background = p_back;
 
-		// 添加恐惧/死亡的怪物动画
 		int h = rect.shape.x;
 		int w = rect.shape.y;
 
+		// 根据图片生成四个方向的动画序列
+		SetWorkingImage(p_face);
+		for (int i = 0; i < 4; i++)
+		{
+			CFlash flash;
+			for (int j = 0; j < 2; j++)
+			{
+				IMAGE face;
+				int x = i * h;
+				int y = j * w;
+				getimage(&face, y, x, w, h);
+				flash.Add(face);
+			}
+			faces.Add(flash);
+		}
+
+		// 添加恐惧/死亡的怪物动画
 		SetWorkingImage(p_dead);
 		for (int i = 0; i < 2; i++)
 		{
@@ -356,7 +415,7 @@ public:
 				getimage(&face, y, x, w, h);
 				flash.Add(face);
 			}
-			flash_group.Add(flash);
+			faces.Add(flash);
 		}
 
 		for (int i = 2; i < 4; i++)
@@ -369,11 +428,22 @@ public:
 				int y = j * w;
 				getimage(&face, y, x, w, h);
 				flash.Add(face);
-				flash_group.Add(flash);
-			}	
+				faces.Add(flash);
+			}
 		}
 
 		SetWorkingImage(NULL);
+	}
+
+	void init(IMAGE* p_back, IMAGE* p_face, IMAGE* p_dead, CPoint mn, CRect r, int* mp, int s, int c)
+	{
+		init_speed(s);
+
+		init_map(mp);
+
+		init_rect(r);
+
+		init_img(p_back, p_face, p_dead);
 	}
 
 	void Fear(int t)
@@ -394,12 +464,12 @@ public:
 			if (cd == 0)
 				status = 0;
 
-			if (cd >= 100)
-				flash_group.SetIdx(4);
+			if (cd >= MONSTER_FEAR_TIME * 0.1)
+				faces.SetIdx(4);
 			else if (cd % 10 > 5)
-				flash_group.SetIdx(5);
+				faces.SetIdx(5);
 			else
-				flash_group.SetIdx(4);
+				faces.SetIdx(4);
 		}
 	}
 
@@ -421,20 +491,20 @@ public:
 		{
 			switch (d)
 			{
-			case DIR_DOWN:  flash_group.SetIdx(3);  break;
-			case DIR_UP:	flash_group.SetIdx(2);  break;
-			case DIR_RIGHT: flash_group.SetIdx(0);  break;
-			case DIR_LEFT:	flash_group.SetIdx(1);  break;
+			case DIR_DOWN:  faces.SetIdx(3);  break;
+			case DIR_UP:	faces.SetIdx(2);  break;
+			case DIR_RIGHT: faces.SetIdx(0);  break;
+			case DIR_LEFT:	faces.SetIdx(1);  break;
 			}
 		}
 		else if (status == 2)
 		{
 			switch (d)
 			{
-			case DIR_DOWN:  flash_group.SetIdx(8);  break;
-			case DIR_UP:	flash_group.SetIdx(6);  break;
-			case DIR_RIGHT: flash_group.SetIdx(7);  break;
-			case DIR_LEFT:	flash_group.SetIdx(9);  break;
+			case DIR_DOWN:  faces.SetIdx(8);  break;
+			case DIR_UP:	faces.SetIdx(6);  break;
+			case DIR_RIGHT: faces.SetIdx(7);  break;
+			case DIR_LEFT:	faces.SetIdx(9);  break;
 			}
 		}
 
@@ -520,7 +590,7 @@ public:
 			Go();
 		}
 
-		flash_group.Update();
+		faces.Update();
 
 		
 
@@ -528,10 +598,9 @@ public:
 
 	void Reset()
 	{
+		CMover::Reset();
 		cd = 0;
 		status = 0;
-		dir = DIR_NONE;
-		new_dir = DIR_NONE;
 	}
 };
 
@@ -598,33 +667,27 @@ public:
 
 		for (int i = 0; i < num; i++)
 		{
-			int mdx, mdy, mi, mj;
 			CMonster* mons = mons_list[i];
-
-			mons->GetNearCross(mdx, mdy, mi, mj);
-
-			if (mi == pi && mj == pj)
+			CPoint m_s = mons->GetSite();
+			int instance = abs(m_s.x - rect.site.x) + abs(m_s.y - rect.site.y);
+			if (instance <= EAT_TOLERANCE)
 			{
-				int insx = mdx * pdx;
-				int insy = mdy * pdy;
-				if (insx >= 0 && insx <= t && insy >= 0 && insy <= t)
+				int st = mons->GetStatus();
+				if (st == 0)
 				{
-					int st = mons->GetStatus();
-					if (st == 0)
-					{
-						return 1;
-					}
-					else if (st == 1)
-					{
-						score += 10;
-						mons->Die();
+					return 1;
+				}
+				else if (st == 1)
+				{
+					score += 10;
+					mons->Die();
 
-						TCHAR str[10];
-						_itot_s(score, str, 10);
+					TCHAR str[10];
+					_itot_s(score, str, 10);
 
-						outtextxy(1 * BLOCK_SIZE + BLOCK_SIZE / 2, 10 * BLOCK_SIZE + BLOCK_SIZE / 2, _T("     "));
-						outtextxy(1 * BLOCK_SIZE + BLOCK_SIZE / 2, 10 * BLOCK_SIZE + BLOCK_SIZE / 2, str);
-					}
+					outtextxy(1 * BLOCK_SIZE + BLOCK_SIZE / 2, 10 * BLOCK_SIZE + BLOCK_SIZE / 2, _T("     "));
+					outtextxy(1 * BLOCK_SIZE + BLOCK_SIZE / 2, 10 * BLOCK_SIZE + BLOCK_SIZE / 2, str);
+
 				}
 			}
 		}
@@ -634,7 +697,7 @@ public:
 	void Reset()
 	{
 		score = 0;
-		dir = DIR_NONE;
-		new_dir = DIR_NONE;
+		CMover::Reset();
 	}
+
 };
