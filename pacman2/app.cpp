@@ -1,16 +1,44 @@
 ﻿//zh_CN.GBK
-#include "page.h"
+#include "game.h"
 
 int main()
 {
-	CGame game;
 	// init
-	game.Init();
+	init();
+
+	BeginBatchDraw();
+
+	set_game_mode(MENU);
 
 	// 主循环xu
 	while (!game_close)
 	{
-		game.Deal();
+		if (key)
+		{
+			switch (game_mode)
+			{
+			case GAMING:	gaming_deal();		break;
+			case END:		end_deal();			break;
+			case MENU:		menu_deal();		break;
+			}
+			
+
+			key = 0;
+		}
+
+		if (update_event)
+		{
+			update_event = 0;
+
+			switch (game_mode)
+			{
+			case GAMING:	gaming_page();		break;
+			case END:		end_page();			break;
+			case MENU:		menu_page();		break;
+			}
+
+		}
+
 	}
 	
 	EndBatchDraw();

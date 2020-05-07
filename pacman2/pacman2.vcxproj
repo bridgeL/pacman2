@@ -139,13 +139,14 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="app.cpp" />
+    <ClCompile Include="game.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="astar.h" />
     <ClInclude Include="define.h" />
     <ClInclude Include="flash.h" />
+    <ClInclude Include="game.h" />
     <ClInclude Include="mover.h" />
-    <ClInclude Include="page.h" />
     <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>
