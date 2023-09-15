@@ -1,32 +1,32 @@
 //zh_CN.GBK
 #pragma once
-// ´ËÎÄµµÖ÷Òª¶¨ÒåÁË moverÀà£¬ÒÔ¼°ÆäÅÉÉúµÄ monsterÀà
+// æ­¤æ–‡æ¡£ä¸»è¦å®šä¹‰äº† moverç±»ï¼Œä»¥åŠå…¶æ´¾ç”Ÿçš„ monsterç±»
 
 #include "define.h"
 #include "flash.h"
 #include "astar.h"
 
-// ÒıÓÃ¸Ã¿â²ÅÄÜÊ¹ÓÃ TransparentBlt º¯Êı
+// å¼•ç”¨è¯¥åº“æ‰èƒ½ä½¿ç”¨ TransparentBlt å‡½æ•°
 #pragma comment( lib, "MSIMG32.LIB")
 
 class CMover
 {
 protected:
-	IMAGE* p_background;		// ±³¾°Í¼Æ¬µÄÖ¸Õë
-	IMAGE back;					// ÎªÁË¼Ó¿ìclearµÄËÙ¶È£¬ÉèÖÃback³ÉÔ±´¢´æÃ¿´ÎµÄ±³¾°Í¼
-	CFlashGroup faces;	// ¸÷·½Ïò¶¯»­ĞòÁĞµÄÈİÆ÷
+	IMAGE* p_background;		// èƒŒæ™¯å›¾ç‰‡çš„æŒ‡é’ˆ
+	IMAGE back;					// ä¸ºäº†åŠ å¿«clearçš„é€Ÿåº¦ï¼Œè®¾ç½®backæˆå‘˜å‚¨å­˜æ¯æ¬¡çš„èƒŒæ™¯å›¾
+	CFlashGroup faces;	// å„æ–¹å‘åŠ¨ç”»åºåˆ—çš„å®¹å™¨
 
-	CRect rect;					// µ±Ç°µÄÎ»ÖÃ
+	CRect rect;					// å½“å‰çš„ä½ç½®
 
-	CPoint burn;				// ³öÉúµØµã
+	CPoint burn;				// å‡ºç”Ÿåœ°ç‚¹
 
-	int* map;					// µØÍ¼µÄÖ¸Õë
+	int* map;					// åœ°å›¾çš„æŒ‡é’ˆ
 
 	double speed;
 	double speed_d;
 
-	int new_dir;				// ĞÂµÄÔË¶¯·½Ïò£¬¼ÓÈë´ËÊôĞÔÊÇÎªÁË¸ÄÉÆÓÎÏ·ÊÖ¸Ğ
-	int dir;					// ÔË¶¯·½Ïò
+	int new_dir;				// æ–°çš„è¿åŠ¨æ–¹å‘ï¼ŒåŠ å…¥æ­¤å±æ€§æ˜¯ä¸ºäº†æ”¹å–„æ¸¸æˆæ‰‹æ„Ÿ
+	int dir;					// è¿åŠ¨æ–¹å‘
 
 
 public:
@@ -35,32 +35,32 @@ public:
 		faces = CFlashGroup(EAT_FLASH_TIME);
 	}
 
-	// ½«³õÊ¼»¯·Ö½âÎªÒ»ÏµÁĞº¯Êı,Çë°´ÕÕË³ĞòÖ´ĞĞ
+	// å°†åˆå§‹åŒ–åˆ†è§£ä¸ºä¸€ç³»åˆ—å‡½æ•°,è¯·æŒ‰ç…§é¡ºåºæ‰§è¡Œ
 	void init_speed(double s)
 	{
-		// ÉèÖÃËÙ¶È
+		// è®¾ç½®é€Ÿåº¦
 		speed = s;
 	}
 
 	void init_map(int* m)
 	{
-		// ÉèÖÃµØÍ¼µØÖ·
+		// è®¾ç½®åœ°å›¾åœ°å€
 		map = m;
 	}
 
 	void init_rect(CRect r)
 	{
-		// ÉèÖÃµ±Ç°Î»ÖÃ
+		// è®¾ç½®å½“å‰ä½ç½®
 		rect = r;
 		burn = rect.site;
 	}
 
 	void init_img(IMAGE* p_back, IMAGE* p_face, int r, int c)
 	{
-		// ÉèÖÃ±³¾°Í¼Ö¸Õë
+		// è®¾ç½®èƒŒæ™¯å›¾æŒ‡é’ˆ
 		p_background = p_back;
 
-		// ¸ù¾İÍ¼Æ¬Éú³ÉËÄ¸ö·½ÏòµÄ¶¯»­ĞòÁĞ
+		// æ ¹æ®å›¾ç‰‡ç”Ÿæˆå››ä¸ªæ–¹å‘çš„åŠ¨ç”»åºåˆ—
 		int h = rect.shape.x;
 		int w = rect.shape.y;
 
@@ -90,10 +90,15 @@ public:
 		new_dir = DIR_NONE;
 	}
 
-	// ÉèÖÃ/¶ÁÈ¡ µ±Ç°Î»ÖÃµÄ×óÉÏ½Ç×ø±ê
+	void BugReset()		// Set the dir of monsters that are stuck due to dir=0 to 1 to prevent them from getting stuck.
+	{
+		dir = 1;
+	}
+
+	// è®¾ç½®/è¯»å– å½“å‰ä½ç½®çš„å·¦ä¸Šè§’åæ ‡
 	CPoint GetSite() { return rect.site; }
 
-	// ¶ÁÈ¡ µ±Ç°Î»ÖÃµÄÖĞĞÄµã×ø±ê
+	// è¯»å– å½“å‰ä½ç½®çš„ä¸­å¿ƒç‚¹åæ ‡
 	CPoint GetCenter()
 	{
 		CPoint center;
@@ -125,10 +130,10 @@ public:
 
 		switch (dir)
 		{
-		case DIR_DOWN:  rect.site.x += s; break;	// ÏÂ
-		case DIR_RIGHT: rect.site.y += s; break;	// ÓÒ
-		case DIR_UP:	rect.site.x -= s; break;	// ÉÏ
-		case DIR_LEFT:	rect.site.y -= s; break;	// ×ó
+		case DIR_DOWN:  rect.site.x += s; break;	// ä¸‹
+		case DIR_RIGHT: rect.site.y += s; break;	// å³
+		case DIR_UP:	rect.site.x -= s; break;	// ä¸Š
+		case DIR_LEFT:	rect.site.y -= s; break;	// å·¦
 		}
 	}
 
@@ -141,7 +146,7 @@ public:
 	{
 		CPoint c = GetCenter();
 
-		// ¾àÀë×î¿¿½üµÄ¸ñµãµÄ¾àÀë
+		// è·ç¦»æœ€é è¿‘çš„æ ¼ç‚¹çš„è·ç¦»
 		dx = (c.x + BLOCK_SIZE / 2) % BLOCK_SIZE - BLOCK_SIZE / 2;
 		dy = (c.y + BLOCK_SIZE / 2) % BLOCK_SIZE - BLOCK_SIZE / 2;
 
@@ -154,28 +159,28 @@ public:
 
 	bool Turn()
 	{
-		// ×ªÏòÅĞ¶¨
-		// ÎÒÃÇÒªÇó³Ô¶¹ÈËÏñ»ğ³µÒ»Ñù£¬×ÜÊÇÎ»ÓÚ¹Ì¶¨µÄ¹ìµÀÉÏ£¬²»ÄÜ×ÔÓÉÒÆ¶¯µ½ËæÒâµÄ×ø±ê£¬
-		// Òò´ËÔÚ×ªÏòµÄÊ±ºò£¬ĞèÒª½øĞĞÑÏ¸ñµÄÉó²é
+		// è½¬å‘åˆ¤å®š
+		// æˆ‘ä»¬è¦æ±‚åƒè±†äººåƒç«è½¦ä¸€æ ·ï¼Œæ€»æ˜¯ä½äºå›ºå®šçš„è½¨é“ä¸Šï¼Œä¸èƒ½è‡ªç”±ç§»åŠ¨åˆ°éšæ„çš„åæ ‡ï¼Œ
+		// å› æ­¤åœ¨è½¬å‘çš„æ—¶å€™ï¼Œéœ€è¦è¿›è¡Œä¸¥æ ¼çš„å®¡æŸ¥
 
 
-		// ÊÇ·ñÓĞ×ªÏò£¬
-			// ÊÇ·ñÔÚ×ªÍäÈİÏŞÄÚ£¬
-				// ×ªÍäºóÊÇ·ñ×²Ç½
-					// ¾ùÍ¨¹ıÔòÕıÈ·×ªÍä£¬°´ĞÂ·½ÏòÇ°½ø£¬²¢¸üĞÂ¶¯»­ĞòÁĞ
-				// ×²Ç½ÁË£¬²»Ğí×ªÍä£¬°´¾É·½ÏòÇ°½ø
-			// ²»ÔÚ×ªÍäÈİÏØÄÚ£¬²»Ğí×ªÍä£¬°´¾É·½ÏòÇ°½ø
-		// Ã»ÓĞ×ªÏò£¬°´¾É·½ÏòÇ°½ø
+		// æ˜¯å¦æœ‰è½¬å‘ï¼Œ
+			// æ˜¯å¦åœ¨è½¬å¼¯å®¹é™å†…ï¼Œ
+				// è½¬å¼¯åæ˜¯å¦æ’å¢™
+					// å‡é€šè¿‡åˆ™æ­£ç¡®è½¬å¼¯ï¼ŒæŒ‰æ–°æ–¹å‘å‰è¿›ï¼Œå¹¶æ›´æ–°åŠ¨ç”»åºåˆ—
+				// æ’å¢™äº†ï¼Œä¸è®¸è½¬å¼¯ï¼ŒæŒ‰æ—§æ–¹å‘å‰è¿›
+			// ä¸åœ¨è½¬å¼¯å®¹å¿å†…ï¼Œä¸è®¸è½¬å¼¯ï¼ŒæŒ‰æ—§æ–¹å‘å‰è¿›
+		// æ²¡æœ‰è½¬å‘ï¼ŒæŒ‰æ—§æ–¹å‘å‰è¿›
 
 		if (new_dir == DIR_NONE)
 		{
 			dir = DIR_NONE;
 			return 1;
 		}
-		else if (abs(new_dir) != abs(dir) )	// ÊÇ·ñÓĞ×ªÏò
+		else if (abs(new_dir) != abs(dir) )	// æ˜¯å¦æœ‰è½¬å‘
 		{
-			// ×ªÍäÏŞÖÆ
-			const int t = MOVE_TOLERENCE;	// ¿íÈİÃÅÏŞ
+			// è½¬å¼¯é™åˆ¶
+			const int t = MOVE_TOLERENCE;	// å®½å®¹é—¨é™
 
 			int dx, dy, i, j;
 			GetNearCross(dx, dy, i, j);
@@ -185,9 +190,9 @@ public:
 			if ((abs(new_dir) == 2 && abs(dx) < t) || (abs(new_dir) == 1 && abs(dy) < t))
 				turn_flag = 1;
 
-			if (turn_flag)		// ÊÇ·ñÔÚ×ªÍäÈİÏŞÄÚ
+			if (turn_flag)		// æ˜¯å¦åœ¨è½¬å¼¯å®¹é™å†…
 			{
-				// ÏÂÒ»¸ö¸ñµã
+				// ä¸‹ä¸€ä¸ªæ ¼ç‚¹
 				switch (new_dir)
 				{
 				case DIR_DOWN:  i++;  break;
@@ -200,20 +205,20 @@ public:
 				if (j < 0 || j >= MAP_COLUMN)
 					edge_flag = 1;
 
-				if (!edge_flag)	// ÊÇ·ñÔÚ±ß½ç
+				if (!edge_flag)	// æ˜¯å¦åœ¨è¾¹ç•Œ
 				{
 					bool wall_flag = 0;
 
 					if (map[i * MAP_COLUMN + j] == 3)
 						wall_flag = 1;
 
-					if (!wall_flag)	// ×ªÍäºóÊÇ·ñ×²Ç½
+					if (!wall_flag)	// è½¬å¼¯åæ˜¯å¦æ’å¢™
 					{
-						// ·½Ïò¸³Öµ£¬²¢ĞŞ¸Ä¶¯»­
+						// æ–¹å‘èµ‹å€¼ï¼Œå¹¶ä¿®æ”¹åŠ¨ç”»
 
 						dir = new_dir;	
 
-						// ×ø±êĞŞÕı
+						// åæ ‡ä¿®æ­£
 						rect.site.x -= dx;
 						rect.site.y -= dy;
 
@@ -225,19 +230,19 @@ public:
 					}
 
 				}
-				else	// Èç¹û³¬¹ı±ß½ç£¬²»Ğí×ªÍä
+				else	// å¦‚æœè¶…è¿‡è¾¹ç•Œï¼Œä¸è®¸è½¬å¼¯
 				{
 					return 0;
 				}
 
 			}
-			else	// ×ªÍäºó×²Ç½£¬²»Ğí×ªÍä
+			else	// è½¬å¼¯åæ’å¢™ï¼Œä¸è®¸è½¬å¼¯
 			{
 				return 0;
 			}
 
 		}
-		else	// ¿ÉÄÜÊÇµôÍ·»òÕß´ÓDIR_NONEÆğ²½
+		else	// å¯èƒ½æ˜¯æ‰å¤´æˆ–è€…ä»DIR_NONEèµ·æ­¥
 		{
 			dir = new_dir;
 			return 1;
@@ -246,29 +251,29 @@ public:
 
 	bool Go()
 	{
-		// ¼ÆËãÀë×Ô¼º×î½üµÄ½Úµã£¬²¢ÖªµÀ×Ô¼ºÓë´Ë½ÚµãµÄÏà¶ÔÎ»ÖÃ
-		// ¸ù¾İ ÒÆ¶¯·½Ïò ºÍ Óë½ÚµãµÄÏà¶ÔÎ»ÖÃ, ÏÂÒ»¸ö½ÚµãµÄ×ø±ê
-		// ¼ÆËã×Ô¼ºÓëÏÂÒ»¸ö½ÚµãµÄ¾àÀë
-		// ÅĞ¶ÏÈıÖÖ×´Ì¬
-			// ²»»á×²µ½/²»ÊÇÇ½
-			// »á×²µ½£¬µ«ÈÔÈ»ÓĞÒ»¶¨¾àÀë
-			// ÒÑ¾­×²µ½ÁË£¬Ã»ÓĞ¾àÀë
+		// è®¡ç®—ç¦»è‡ªå·±æœ€è¿‘çš„èŠ‚ç‚¹ï¼Œå¹¶çŸ¥é“è‡ªå·±ä¸æ­¤èŠ‚ç‚¹çš„ç›¸å¯¹ä½ç½®
+		// æ ¹æ® ç§»åŠ¨æ–¹å‘ å’Œ ä¸èŠ‚ç‚¹çš„ç›¸å¯¹ä½ç½®, ä¸‹ä¸€ä¸ªèŠ‚ç‚¹çš„åæ ‡
+		// è®¡ç®—è‡ªå·±ä¸ä¸‹ä¸€ä¸ªèŠ‚ç‚¹çš„è·ç¦»
+		// åˆ¤æ–­ä¸‰ç§çŠ¶æ€
+			// ä¸ä¼šæ’åˆ°/ä¸æ˜¯å¢™
+			// ä¼šæ’åˆ°ï¼Œä½†ä»ç„¶æœ‰ä¸€å®šè·ç¦»
+			// å·²ç»æ’åˆ°äº†ï¼Œæ²¡æœ‰è·ç¦»
 
 		int dx, dy, i, j;
 		GetNearCross(dx, dy, i, j);
 
 		switch (dir)
 		{
-		case DIR_DOWN:  if (dx >= 0) i++; break;	// ÏÂ
-		case DIR_RIGHT: if (dy >= 0) j++; break;	// ÓÒ
-		case DIR_UP:	if (dx <= 0) i--; break;	// ÉÏ
-		case DIR_LEFT:	if (dy <= 0) j--; break;	// ×ó
+		case DIR_DOWN:  if (dx >= 0) i++; break;	// ä¸‹
+		case DIR_RIGHT: if (dy >= 0) j++; break;	// å³
+		case DIR_UP:	if (dx <= 0) i--; break;	// ä¸Š
+		case DIR_LEFT:	if (dy <= 0) j--; break;	// å·¦
 		}
 
-		// Èç¹û³¬¹ı±ß½ç£¬¾Í²»½øĞĞ×²Ç½¼ì²é
+		// å¦‚æœè¶…è¿‡è¾¹ç•Œï¼Œå°±ä¸è¿›è¡Œæ’å¢™æ£€æŸ¥
 		if (j < 0 || j >= MAP_COLUMN)
 		{
-			// ÒÆ¶¯
+			// ç§»åŠ¨
 			Move(speed);
 
 			if (rect.site.y < 0)
@@ -280,13 +285,13 @@ public:
 		}
 
 
-		int s = (int)speed;	// ÒÆ¶¯¾àÀë
+		int s = (int)speed;	// ç§»åŠ¨è·ç¦»
 
-		if (map[i * MAP_COLUMN + j] == 3)	// Ç½
+		if (map[i * MAP_COLUMN + j] == 3)	// å¢™
 		{
-			const int t = BLOCK_SIZE - PERSON_SIZE / 2;	// Ç½±ÚµÄºñ¶È
+			const int t = BLOCK_SIZE - PERSON_SIZE / 2;	// å¢™å£çš„åšåº¦
 
-			// ¼ÆËãÓëÇ½µÄ¾àÀë
+			// è®¡ç®—ä¸å¢™çš„è·ç¦»
 			int instance = (int)speed;
 
 			switch (dir)
@@ -306,7 +311,7 @@ public:
 			s = instance;
 		}
 
-		// ÒÆ¶¯
+		// ç§»åŠ¨
 		Move(s);
 
 		return 1;
@@ -316,21 +321,21 @@ public:
 	{
 		faces.Update();
 
-		// ×ªÏò
+		// è½¬å‘
 		if (Turn())
 			SetFlash(dir);
 
-		// Ç°½ø
+		// å‰è¿›
 		Go();
 	}
 
 private:
-	// Í¸Ã÷ÌùÍ¼º¯Êı
-	// ²ÎÊı£º
-	//		dstimg: Ä¿±ê IMAGE ¶ÔÏóÖ¸Õë¡£NULL ±íÊ¾Ä¬ÈÏ´°Ìå
-	//		x, y:	Ä¿±êÌùÍ¼Î»ÖÃ
-	//		srcimg: Ô´ IMAGE ¶ÔÏóÖ¸Õë¡£NULL ±íÊ¾Ä¬ÈÏ´°Ìå
-	//		transparentcolor: Í¸Ã÷É«¡£srcimg µÄ¸ÃÑÕÉ«²¢²»»á¸´ÖÆµ½ dstimg ÉÏ£¬´Ó¶øÊµÏÖÍ¸Ã÷ÌùÍ¼
+	// é€æ˜è´´å›¾å‡½æ•°
+	// å‚æ•°ï¼š
+	//		dstimg: ç›®æ ‡ IMAGE å¯¹è±¡æŒ‡é’ˆã€‚NULL è¡¨ç¤ºé»˜è®¤çª—ä½“
+	//		x, y:	ç›®æ ‡è´´å›¾ä½ç½®
+	//		srcimg: æº IMAGE å¯¹è±¡æŒ‡é’ˆã€‚NULL è¡¨ç¤ºé»˜è®¤çª—ä½“
+	//		transparentcolor: é€æ˜è‰²ã€‚srcimg çš„è¯¥é¢œè‰²å¹¶ä¸ä¼šå¤åˆ¶åˆ° dstimg ä¸Šï¼Œä»è€Œå®ç°é€æ˜è´´å›¾
 	void transparentimage(IMAGE* dstimg, int x, int y, IMAGE* srcimg, UINT transparentcolor)
 	{
 		HDC dstDC = GetImageHDC(dstimg);
@@ -338,15 +343,15 @@ private:
 		int w = srcimg->getwidth();
 		int h = srcimg->getheight();
 
-		// Ê¹ÓÃ Windows GDI º¯ÊıÊµÏÖÍ¸Ã÷Î»Í¼
+		// ä½¿ç”¨ Windows GDI å‡½æ•°å®ç°é€æ˜ä½å›¾
 		TransparentBlt(dstDC, x, y, w, h, srcDC, 0, 0, w, h, transparentcolor);
 	}
 
 public:
 	void Draw()
 	{
-		// ÎªÁËÃÀ¹Û£¬
-		// »æÍ¼×ø±êdraw ºÍ Êµ¼Ê×ø±êsite Ö®¼ä´æÔÚ¹Ì¶¨Æ«²î bias = BLOCK_SIZE / 2
+		// ä¸ºäº†ç¾è§‚ï¼Œ
+		// ç»˜å›¾åæ ‡draw å’Œ å®é™…åæ ‡site ä¹‹é—´å­˜åœ¨å›ºå®šåå·® bias = BLOCK_SIZE / 2
 		// center = site + shape / 2
 		// draw = center + bias - shape / 2 
 		//      = site + bias
@@ -371,8 +376,8 @@ class CMonster :public CMover
 {
 private:
 	int cd;
-	int status;			// 0×·Öğ¡¢1¿Ö¾å¡¢2ËÀÍö
-	CPoint escape_rc;	// ÌÓÅÜµÄµØµã
+	int status;			// 0è¿½é€ã€1ææƒ§ã€2æ­»äº¡
+	CPoint escape_rc;	// é€ƒè·‘çš„åœ°ç‚¹
 	CAStar brain;
 
 public:
@@ -390,7 +395,7 @@ public:
 
 	void init_chase_mode(CPoint chase_mode)
 	{
-		// ÉèÖÃ×·»÷Ä£Ê½
+		// è®¾ç½®è¿½å‡»æ¨¡å¼
 		int instance = chase_mode.x;
 		int path = chase_mode.y;
 		brain.SetStyle(instance, path);
@@ -398,13 +403,13 @@ public:
 
 	void init_img(IMAGE* p_back, IMAGE* p_face, IMAGE* p_dead)
 	{
-		// ÉèÖÃ±³¾°Í¼Ö¸Õë
+		// è®¾ç½®èƒŒæ™¯å›¾æŒ‡é’ˆ
 		p_background = p_back;
 
 		int h = rect.shape.x;
 		int w = rect.shape.y;
 
-		// ¸ù¾İÍ¼Æ¬Éú³ÉËÄ¸ö·½ÏòµÄ¶¯»­ĞòÁĞ
+		// æ ¹æ®å›¾ç‰‡ç”Ÿæˆå››ä¸ªæ–¹å‘çš„åŠ¨ç”»åºåˆ—
 		SetWorkingImage(p_face);
 		for (int i = 0; i < 4; i++)
 		{
@@ -420,7 +425,7 @@ public:
 			faces.Add(flash);
 		}
 
-		// Ìí¼Ó¿Ö¾å/ËÀÍöµÄ¹ÖÎï¶¯»­
+		// æ·»åŠ ææƒ§/æ­»äº¡çš„æ€ªç‰©åŠ¨ç”»
 		SetWorkingImage(p_dead);
 		for (int i = 0; i < 2; i++)
 		{
@@ -543,28 +548,28 @@ public:
 
 		Fear();
 
-		// monsterµÄÎ»ÖÃ
+		// monsterçš„ä½ç½®
 		int mdx, mdy, mi, mj;
 		GetNearCross(mdx, mdy, mi, mj);
 
-		// playerµÄÎ»ÖÃ
+		// playerçš„ä½ç½®
 		int pdx, pdy, pi, pj;
 		p->GetNearCross(pdx, pdy, pi, pj);
 
 		if (status == 0 )
 		{
-			// A* Ëã·¨£¬¼ÆËãÒÆ¶¯·½Ïò
+			// A* ç®—æ³•ï¼Œè®¡ç®—ç§»åŠ¨æ–¹å‘
 			brain.init(map, CPoint(mi, mj), CPoint(pi, pj));
 			brain.BuildAWay();
 
 			int dir = brain.GetDir();
 			SetNewDir(dir);
 				
-			// ×ªÏò
+			// è½¬å‘
 			if (Turn())
 				SetFlash(dir);
 
-			// Ç°½ø
+			// å‰è¿›
 			Go();
 		}
 		else if (status == 1)
@@ -617,7 +622,7 @@ public:
 			}
 
 
-			// A* Ëã·¨£¬¼ÆËãÒÆ¶¯·½Ïò
+			// A* ç®—æ³•ï¼Œè®¡ç®—ç§»åŠ¨æ–¹å‘
 			brain.init(map, CPoint(mi, mj), CPoint(escape_rc.x, escape_rc.y));
 
 			if (abs(mi - pi) <= 4 && abs(mj - pj) <= 3)
@@ -647,16 +652,16 @@ public:
 			int dir = brain.GetDir();
 			SetNewDir(dir);
 
-			// ×ªÏò
+			// è½¬å‘
 			if (Turn())
 				SetFlash(dir);
 
-			// Ç°½ø
+			// å‰è¿›
 			Go();
 		}
 		else
 		{
-			// A* Ëã·¨£¬¼ÆËãÒÆ¶¯·½Ïò
+			// A* ç®—æ³•ï¼Œè®¡ç®—ç§»åŠ¨æ–¹å‘
 			brain.init(map, CPoint(mi, mj), CPoint(13, 10));
 			brain.BuildAWay();
 
@@ -667,11 +672,11 @@ public:
 			else
 				SetNewDir(dir);
 
-			// ×ªÏò
+			// è½¬å‘
 			if (Turn())
 				SetFlash(dir);
 
-			// Ç°½ø
+			// å‰è¿›
 			Go();
 		}
 
@@ -682,6 +687,11 @@ public:
 		CMover::Reset();
 		cd = 0;
 		status = 0;
+	}
+
+	void BugReset()
+	{
+		CMover::BugReset();
 	}
 };
 
@@ -706,11 +716,11 @@ public:
 		outtextxy(1 * BLOCK_SIZE + BLOCK_SIZE / 2, 11 * BLOCK_SIZE, str);
 	}
 
-	int Eat()	// ³Ô¶¹
+	int Eat()	// åƒè±†
 	{
 		const int t = EAT_TOLERANCE;
 
-		// ½ÚµãÎ»ÖÃ
+		// èŠ‚ç‚¹ä½ç½®
 		int dx, dy, i, j;
 		GetNearCross(dx, dy, i, j);
 
@@ -745,7 +755,7 @@ public:
 		return 0;
 	}
 
-	bool Fight(CMonster** mons_list, int num)		// ³Ô¹ÖÎï
+	bool Fight(CMonster** mons_list, int num)		// åƒæ€ªç‰©
 	{
 		const int t = 49;
 
