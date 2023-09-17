@@ -6,20 +6,20 @@ int cnt2 = 1;
 
 int game_mode;
 
-bool game_close;				// Ö¸µ¼¶àÏß³Ì¹Ø±ÕµÄÈ«¾Ö±äÁ¿
-bool update_event;				// Ö¸µ¼»æÍ¼¸üĞÂµÄÈ«¾Ö±äÁ¿£¬¿ØÖÆÖ¡ÂÊ
-char key;						// ¼üÅÌ·ûºÅÔİ´æ
+bool game_close;				// æŒ‡å¯¼å¤šçº¿ç¨‹å…³é—­çš„å…¨å±€å˜é‡
+bool update_event;				// æŒ‡å¯¼ç»˜å›¾æ›´æ–°çš„å…¨å±€å˜é‡ï¼Œæ§åˆ¶å¸§ç‡
+char key;						// é”®ç›˜ç¬¦å·æš‚å­˜
 
-CPacman pacman;			// ³Ô¶¹ÈË	
-CMonster red;			// ËÄ¸ö¹ÖÎï
+CPacman pacman;			// åƒè±†äºº	
+CMonster red;			// å››ä¸ªæ€ªç‰©
 CMonster pink;
 CMonster orange;
 CMonster blue;
 CMonster* mons_list[4] = {&red, &pink, &orange, &blue};
 
-int map[MAP_CNT];		// µØÍ¼ 31 x 28 ĞĞÁĞÊ½´æ´¢£¨µ«ÊÇĞèÒª×¢Òâ easyx ÊÇ ÁĞĞĞÊ½»æÍ¼£©
+int map[MAP_CNT];		// åœ°å›¾ 31 x 28 è¡Œåˆ—å¼å­˜å‚¨ï¼ˆä½†æ˜¯éœ€è¦æ³¨æ„ easyx æ˜¯ åˆ—è¡Œå¼ç»˜å›¾ï¼‰
 
-IMAGE background;		// ±³¾°Í¼Æ¬
+IMAGE background;		// èƒŒæ™¯å›¾ç‰‡
 
 int bean_cnt;
 int win;
@@ -28,15 +28,15 @@ int choose;
 
 void HpSleep(int ms)
 {
-	static clock_t oldclock = clock();		// ¾²Ì¬±äÁ¿£¬¼ÇÂ¼ÉÏÒ»´Î tick
+	static clock_t oldclock = clock();		// é™æ€å˜é‡ï¼Œè®°å½•ä¸Šä¸€æ¬¡ tick
 
-	oldclock += ms * CLOCKS_PER_SEC / 1000;	// ¸üĞÂ tick
+	oldclock += ms * CLOCKS_PER_SEC / 1000;	// æ›´æ–° tick
 
-	if (clock() > oldclock)					// Èç¹ûÒÑ¾­³¬Ê±£¬ÎŞĞèÑÓÊ±
+	if (clock() > oldclock)					// å¦‚æœå·²ç»è¶…æ—¶ï¼Œæ— éœ€å»¶æ—¶
 		oldclock = clock();
 	else
-		while (clock() < oldclock)			// ÑÓÊ±
-			Sleep(1);						// ÊÍ·Å CPU ¿ØÖÆÈ¨£¬½µµÍ CPU Õ¼ÓÃÂÊ
+		while (clock() < oldclock)			// å»¶æ—¶
+			Sleep(1);						// é‡Šæ”¾ CPU æ§åˆ¶æƒï¼Œé™ä½ CPU å ç”¨ç‡
 }
 
 DWORD WINAPI time_thread(PVOID param)
@@ -101,14 +101,14 @@ DWORD WINAPI keyboard_thread(PVOID)
 void init()
 {
 	// init variables
-	game_close = 0;					// Ö¸µ¼ÓÎÏ·¹Ø±Õ	  È«¾Ö±äÁ¿
-	update_event = 0;				// Ö¸µ¼»æÍ¼¸üĞÂµÄÈ«¾Ö±äÁ¿£¬¿ØÖÆÖ¡ÂÊ
-	key = 0;						// ¼üÅÌ·ûºÅ»º´æ
+	game_close = 0;					// æŒ‡å¯¼æ¸¸æˆå…³é—­	  å…¨å±€å˜é‡
+	update_event = 0;				// æŒ‡å¯¼ç»˜å›¾æ›´æ–°çš„å…¨å±€å˜é‡ï¼Œæ§åˆ¶å¸§ç‡
+	key = 0;						// é”®ç›˜ç¬¦å·ç¼“å­˜
 
 	srand((unsigned int)time(NULL));
 
 	// init graph
-	initgraph(GAME_WIDTH, GAME_HEIGHT + 20, EW_SHOWCONSOLE);
+	initgraph(GAME_WIDTH, GAME_HEIGHT + 20, EX_SHOWCONSOLE);		// The new version of EasyX will Rename EW_SHOWCONSOLE macro to EX_ SHOWCONSOLE
 
 	// init pacman
 	IMAGE img_pacman;
@@ -134,7 +134,7 @@ void init()
 	INIT_MONSTER(pink, &img_pink, &img_dead, MONSTER_SPEED_0, 12, 10, 1, 3, BROWN);
 	INIT_MONSTER(red, &img_red, &img_dead, MONSTER_SPEED_1, 13, 10, 1, 10, RED);
 
-	// ÉèÖÃ¶àÏß³Ì
+	// è®¾ç½®å¤šçº¿ç¨‹
 	CreateThread(NULL, 0, keyboard_thread, NULL, 0, NULL);
 	CreateThread(NULL, 0, time_thread, (PVOID)FPS, 0, NULL);
 }
@@ -286,8 +286,8 @@ void end_page_init()
 
 void gaming_page_init()
 {
-	bean_cnt = 0;					// ³Ô¶¹¼ÆÊıÆ÷£¬µ±È«²¿¶¹×Ó¶¼±»³Ôµôºó£¬ÓÎÏ·½áÊø
-	win = 0;						// ÓÎÏ·Ê¤Àû/Ê§°Ü±êÖ¾
+	bean_cnt = 0;					// åƒè±†è®¡æ•°å™¨ï¼Œå½“å…¨éƒ¨è±†å­éƒ½è¢«åƒæ‰åï¼Œæ¸¸æˆç»“æŸ
+	win = 0;						// æ¸¸æˆèƒœåˆ©/å¤±è´¥æ ‡å¿—
 
 	pacman.Reset();
 	for (int i = 0; i < 4; i++)
@@ -342,29 +342,37 @@ void menu_page()
 
 void gaming_page()
 {
-	// Çå³ı
+	// æ¸…é™¤
 	pacman.Clear();
 	for (int i = 0; i < 4; i++)
 		mons_list[i]->Clear();
 
-	// ×ø±ê¸üĞÂ
+	for (int i = 0; i < 4; i++)
+	{
+		if(mons_list[i]->GetDir() == 0)	// Detect if any monsters are stuck due to dir=0
+		{
+			mons_list[i]->BugReset();		// Correct incorrect dir values
+		}
+	}
+
+	// åæ ‡æ›´æ–°
 	pacman.Update();
 	for (int i = 0; i < 4; i++)
 		mons_list[i]->Update(&pacman);
 
-	// ³Ô¶¹×Ó
+	// åƒè±†å­
 	int bean_type = pacman.Eat();
 
 	if (bean_type > 0)
 	{
-		// ³ÔÍêËùÓĞ¶¹×Ó£¬ÓÎÏ·Ê¤Àû
+		// åƒå®Œæ‰€æœ‰è±†å­ï¼Œæ¸¸æˆèƒœåˆ©
 		bean_cnt++;
 		if (bean_cnt >= BEAN_NUM)
 		{
 			win = 1;
 		}
 
-		// ³Ôµ½´óÁ¦Íè
+		// åƒåˆ°å¤§åŠ›ä¸¸
 		if (bean_type == 2)
 		{
 			for (int i = 0; i < 4; i++)
@@ -372,7 +380,7 @@ void gaming_page()
 		}
 	}
 
-	// ÓëÓöµ½µÄËùÓĞ¹ÖÎïÕ½¶·
+	// ä¸é‡åˆ°çš„æ‰€æœ‰æ€ªç‰©æˆ˜æ–—
 	bool die = pacman.Fight(mons_list, 4);
 
 	if (die)
@@ -380,12 +388,12 @@ void gaming_page()
 		win = -1;
 	}
 
-	// »æÍ¼
+	// ç»˜å›¾
 	pacman.Draw();
 	for (int i = 0; i < 4; i++)
 		mons_list[i]->Draw();
 
-	// Ë¢ĞÂÏÔ´æ
+	// åˆ·æ–°æ˜¾å­˜
 	FlushBatchDraw();
 
 	if (win)
@@ -427,7 +435,7 @@ void end_page()
 
 void gaming_deal()
 {
-	// ÉèÖÃ²ÎÊı
+	// è®¾ç½®å‚æ•°
 	if (key == 27)
 		set_game_mode(END);
 
